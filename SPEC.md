@@ -24,7 +24,7 @@
 
 ---
 
-## Introduction
+## Introduction :)
 
 This project is a web-based **Lord of the Rings themed board game character sheet manager**. Users can log in, create new character sheets, or select from premade characters (e.g., Aragorn, Gandalf).
 
