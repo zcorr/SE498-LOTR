@@ -1,4 +1,4 @@
-CREATE TABLE character_spells (
+CREATE TABLE IF NOT EXISTS character_spells (
     character_spell_id SERIAL PRIMARY KEY,
     character_id INTEGER NOT NULL REFERENCES characters(character_id),
     spell_id INTEGER NOT NULL REFERENCES spells(spell_id),

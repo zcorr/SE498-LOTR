@@ -1,4 +1,4 @@
-CREATE TABLE features (
+CREATE TABLE IF NOT EXISTS features (
     feature_id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     feature_type feature_type NOT NULL,

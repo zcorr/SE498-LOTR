@@ -1,3 +1,6 @@
+\set ON_ERROR_STOP on
+SET client_min_messages TO warning;
+
 -- Initialize database schema
 -- Run migrations in order
 

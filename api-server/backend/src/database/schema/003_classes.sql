@@ -1,4 +1,4 @@
-CREATE TABLE classes (
+CREATE TABLE IF NOT EXISTS classes (
     class_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,

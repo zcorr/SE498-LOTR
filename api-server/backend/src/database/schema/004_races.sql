@@ -1,4 +1,4 @@
-CREATE TABLE races (
+CREATE TABLE IF NOT EXISTS races (
     race_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,

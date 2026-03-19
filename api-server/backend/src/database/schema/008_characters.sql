@@ -1,4 +1,4 @@
-CREATE TABLE characters (
+CREATE TABLE IF NOT EXISTS characters (
     character_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     level INT NOT NULL DEFAULT 1,

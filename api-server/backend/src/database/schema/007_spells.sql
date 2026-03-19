@@ -1,4 +1,4 @@
-CREATE TABLE spells (
+CREATE TABLE IF NOT EXISTS spells (
     spell_id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     spell_level INT NOT NULL,
