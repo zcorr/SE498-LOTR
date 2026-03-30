@@ -6,7 +6,7 @@ RETURNS void
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    IF NOT condition THEN
+    IF condition IS DISTINCT FROM TRUE THEN
         RAISE EXCEPTION '%', message;
     END IF;
 END;
