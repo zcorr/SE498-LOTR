@@ -5,7 +5,7 @@ SET client_min_messages TO warning;
 -- Run migrations in order
 
 \i schema/001_classes.sql
-\i schema/002_race.sql
+\i schema/002_races.sql
 \i schema/003_stats.sql
 \i schema/004_species.sql
 \i schema/005_abilities.sql

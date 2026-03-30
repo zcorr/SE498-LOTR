@@ -182,10 +182,10 @@ SELECT pg_temp.assert_columns('classes', ARRAY['id', 'name', 'description']);
 SELECT pg_temp.assert_primary_key('classes', ARRAY['id']);
 SELECT pg_temp.assert_unique_key('classes', ARRAY['name']);
 
-SELECT pg_temp.assert_table_exists('race');
-SELECT pg_temp.assert_columns('race', ARRAY['id', 'name', 'modifiers']);
-SELECT pg_temp.assert_primary_key('race', ARRAY['id']);
-SELECT pg_temp.assert_unique_key('race', ARRAY['name']);
+SELECT pg_temp.assert_table_exists('races');
+SELECT pg_temp.assert_columns('races', ARRAY['id', 'name', 'modifiers']);
+SELECT pg_temp.assert_primary_key('races', ARRAY['id']);
+SELECT pg_temp.assert_unique_key('races', ARRAY['name']);
 
 SELECT pg_temp.assert_table_exists('stats');
 SELECT pg_temp.assert_columns('stats', ARRAY['id', 'name', 'base_value']);
@@ -207,7 +207,7 @@ SELECT pg_temp.assert_columns('premades', ARRAY['id', 'name', 'class_id', 'race_
 SELECT pg_temp.assert_primary_key('premades', ARRAY['id']);
 SELECT pg_temp.assert_unique_key('premades', ARRAY['name']);
 SELECT pg_temp.assert_foreign_key('premades', 'class_id', 'classes', 'id');
-SELECT pg_temp.assert_foreign_key('premades', 'race_id', 'race', 'id');
+SELECT pg_temp.assert_foreign_key('premades', 'race_id', 'races', 'id');
 SELECT pg_temp.assert_udt('premades', 'stats', 'jsonb');
 
 SELECT 'schema creation tests passed' AS result;
