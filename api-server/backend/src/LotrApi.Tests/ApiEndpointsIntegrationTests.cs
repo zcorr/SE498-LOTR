@@ -19,17 +19,17 @@ public class ApiEndpointsIntegrationTests : IClassFixture<WebApplicationFactory<
             AllowAutoRedirect = false,
         });
 
-    // --- Process liveness (SCRUM-11 style; avoids clashing with game GET /health in SPEC) ---
+    // --- Server health (SCRUM-11 / SPEC: GET /health = API liveness) ---
 
     [Fact]
-    public async Task GetLive_Returns200_ForProcessHealth()
+    public async Task GetHealth_Returns200_ForServerHealth()
     {
-        var response = await _client.GetAsync("/live");
+        var response = await _client.GetAsync("/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    // --- SPEC table: 10 endpoints ---
+    // --- Game data routes per SPEC (server liveness is GET /health above) ---
 
     [Fact]
     public async Task GetClassById_Returns200_AndShapeFromSpec()
@@ -57,9 +57,9 @@ public class ApiEndpointsIntegrationTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
-    public async Task GetHealth_Returns200_CharacterHealthPayload()
+    public async Task GetCharHealth_Returns200_CharacterHealthPayload()
     {
-        var response = await _client.GetAsync("/health");
+        var response = await _client.GetAsync("/charhealth");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();

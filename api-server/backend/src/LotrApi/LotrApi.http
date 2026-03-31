@@ -1,6 +1,11 @@
 @LotrApi_HostAddress = http://localhost:5030
 
+### API server health (liveness)
 GET {{LotrApi_HostAddress}}/health
+Accept: application/json
+
+### Character health (game data — SCRUM-23)
+GET {{LotrApi_HostAddress}}/charhealth
 Accept: application/json
 
 ###
