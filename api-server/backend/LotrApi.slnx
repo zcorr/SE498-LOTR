@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LotrApi.Tests/LotrApi.Tests.csproj" />
+    <Project Path="src/LotrApi/LotrApi.csproj" />
+  </Folder>
+</Solution>
