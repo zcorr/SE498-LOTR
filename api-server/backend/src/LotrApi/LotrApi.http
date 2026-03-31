@@ -1,0 +1,6 @@
+@LotrApi_HostAddress = http://localhost:5030
+
+GET {{LotrApi_HostAddress}}/health
+Accept: application/json
+
+###
