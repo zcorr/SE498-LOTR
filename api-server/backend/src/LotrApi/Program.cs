@@ -2,10 +2,7 @@
 // LOTR API — implementation checklist (you fill in; tests are written first/TDD)
 // =============================================================================
 //
-// SCRUM-11 (skeleton): Expose a process-liveness route so ops/CI can ping the API
-// without conflicting with SPEC "GET /health" (character health data, SCRUM-23).
-// Suggested: GET /live -> 200 OK (body optional). Jira SCRUM-11 mentions /health
-// for "app is up"; either rename that AC to /live or split routes with your team.
+// SCRUM-11 (skeleton): GET /health -> 200 for API server (process) health per SPEC.
 //
 // SCRUM-13 / DB: Register Npgsql + EF or raw ADO; connection string from
 // Configuration (appsettings / env). Your SQL lives under src/database/.
@@ -18,7 +15,8 @@
 // Endpoints (SPEC — map these when you implement):
 //   GET  /class/{id}   -> name, desc, racialids (see SPEC example)
 //   GET  /stats        -> character stat values from Stats (or related) table
-//   GET  /health       -> character health values (NOT process liveness)
+//   GET  /health       -> API server health (liveness)
+//   GET  /charhealth   -> character health values (SCRUM-23)
 //   GET  /strength     -> strength values
 //   GET  /abilities    -> abilities list (id, name, desc, class_id)
 //   GET  /race         -> races (id, name, modifiers)
@@ -33,22 +31,19 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
-builder.Services.AddScoped<I????, ?????>();
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// TODO: builder.Services — DbContext, auth, options, any domain services.
 
 var app = builder.Build();
 
-// TODO: Middleware pipeline — HTTPS, authentication/authorization, etc.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
 
-// TODO: MapGet / MapPost for each SPEC route (or MapControllers if you switch style).
+// Server health (SCRUM-11 / SPEC).
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
+// TODO: Map SPEC routes (or MapControllers) — see tests in LotrApi.Tests.
 
 app.Run();
 
