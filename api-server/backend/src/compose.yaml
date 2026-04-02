@@ -1,0 +1,31 @@
+services:
+  lotr.webapi:
+    image: lotr.webapi
+    build:
+      context: .
+      dockerfile: LotrApi/Dockerfile
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Database=lotr;Username=postgres;Password=postgres
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: lotr
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
