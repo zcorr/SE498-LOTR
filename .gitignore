@@ -1,1 +1,21 @@
 .idea/
+
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.pidb
+
+# NuGet
+*.nupkg
+.nuget/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+*.env.local
