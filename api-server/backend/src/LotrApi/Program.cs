@@ -33,6 +33,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+// Get the connection string
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
