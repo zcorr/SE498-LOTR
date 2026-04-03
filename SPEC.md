@@ -6,7 +6,7 @@
 | **Team** | Team X |
 | **Reviewers** | Zack Corr, Kylee Down, Ivan Dombiak, Tom DuPont |
 | **Created On** | February 23rd, 2026 |
-| **Last Updated** | March 18th, 2026 |
+| **Last Updated** | March 31st, 2026 |
 | **Jira** | [Link here](#https://lotrbg.atlassian.net/jira/software/projects/SCRUM/boards/1) |
 
 ---
@@ -81,13 +81,14 @@ Frontend ←→ Web Server (RPC) ←→ API Server (REST)
 
 ### API Server (C# Web API)
 
-10 exposed REST endpoints:
+11 exposed REST endpoints:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/class/{id}` | Returns class data (name, desc, race_id, etc.) |
 | `GET` | `/stats` | Returns character stat values |
-| `GET` | `/health` | Returns character health values |
+| `GET` | `/health` | Returns API server health (process / liveness) |
+| `GET` | `/charhealth` | Returns character health values |
 | `GET` | `/strength` | Returns character strength values |
 | `GET` | `/abilities` | Returns character abilities list |
 | `GET` | `/race` | Returns character race |
@@ -154,6 +155,8 @@ Three-tier architecture: **Frontend → Web Server → API Server**
 | `Stats` | id, name, base_value |
 | `Species` | id, name, traits |
 | `Premades` | id, name, class_id, race_id, stats (JSON) |
+
+**Naming (health):** `GET /health` is **server** liveness only. Character health is **`GET /charhealth`**. In data, use stat name **`charhealth`** in `Stats` and key **`charhealth`** in `Premades.stats` JSON (not `health`).
 
 ### Business Logic
 
