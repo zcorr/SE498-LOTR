@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premade Characters — Middle-earth Character Sheets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+
+  <style>
+    :root {
+      --lotr-bg:           #1a1f14;
+      --lotr-card-bg:      #f5ead6;
+      --lotr-card-border:  #8b6914;
+      --lotr-accent:       #8b6914;
+      --lotr-accent-hover: #b38b1d;
+      --lotr-text:         #2c1f08;
+      --lotr-muted:        #7a6040;
+      --lotr-input-bg:     #fdf4e3;
+      --lotr-input-border: #c4a35a;
+      --lotr-nav-bg:       #111508;
+      --lotr-error:        #8b1a1a;
+      --lotr-tag-bg:       #ecdbb5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--lotr-bg);
+      background-image: radial-gradient(ellipse at 50% 0%, rgba(139,105,20,0.18) 0%, transparent 70%);
+      font-family: 'Georgia', serif;
+      color: var(--lotr-text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Nav ───────────────────────────────────────────────── */
+    nav.lotr-nav {
+      background-color: var(--lotr-nav-bg);
+      border-bottom: 1px solid var(--lotr-card-border);
+      padding: 0.65rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand { color: #c4a35a; font-size: 1.1rem; font-weight: bold; letter-spacing: 0.05em; text-decoration: none; }
+    .nav-brand:hover { color: var(--lotr-accent-hover); }
+    .nav-links a { color: #c4a35a; text-decoration: none; font-size: 0.88rem; margin-left: 1.5rem; letter-spacing: 0.04em; opacity: 0.8; transition: opacity 0.2s; }
+    .nav-links a:hover { opacity: 1; }
+    .nav-links a.active { opacity: 1; border-bottom: 1px solid #c4a35a; }
+
+    /* ── Main content ──────────────────────────────────────── */
+    main { flex: 1; padding: 2.5rem 1.5rem; max-width: 900px; margin: 0 auto; width: 100%; }
+
+    /* ── Page heading ──────────────────────────────────────── */
+    .page-heading {
+      text-align: center;
+      color: #c4a35a;
+      font-size: 2rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.25rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .page-heading-sub {
+      text-align: center;
+      color: rgba(196,163,90,0.6);
+      font-style: italic;
+      font-size: 0.85rem;
+      margin-bottom: 1.75rem;
+    }
+
+    /* ── Search bar ────────────────────────────────────────── */
+    .search-wrap {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .search-input {
+      flex: 1;
+      background-color: var(--lotr-input-bg);
+      border: 1.5px solid var(--lotr-input-border);
+      border-radius: 50px;
+      color: var(--lotr-text);
+      padding: 0.55rem 1.25rem;
+      font-size: 0.95rem;
+      font-family: 'Georgia', serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-input::placeholder { color: var(--lotr-muted); opacity: 0.7; }
+    .search-input:focus { border-color: var(--lotr-accent); box-shadow: 0 0 0 3px rgba(139,105,20,0.2); outline: none; }
+
+    /* ── Filter pills ──────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.75rem;
+    }
+    .filter-pill {
+      background: none;
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 50px;
+      color: var(--lotr-muted);
+      padding: 0.25rem 0.9rem;
+      font-size: 0.8rem;
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .filter-pill:hover,
+    .filter-pill.active {
+      background-color: var(--lotr-accent);
+      border-color: var(--lotr-accent);
+      color: #fff8e7;
+    }
+    .filter-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(196,163,90,0.5);
+      margin-right: 0.25rem;
+      align-self: center;
+    }
+
+    /* ── Status / loading ──────────────────────────────────── */
+    #status-msg {
+      text-align: center;
+      color: rgba(196,163,90,0.6);
+      font-style: italic;
+      font-size: 0.9rem;
+      padding: 2rem 0;
+    }
+
+    /* ── Character cards ───────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.1rem;
+    }
+
+    .char-card {
+      background-color: var(--lotr-card-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 1.25rem 1.4rem 1.1rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .char-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      border-color: var(--lotr-accent-hover);
+    }
+    .char-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--lotr-accent), var(--lotr-accent-hover));
+    }
+
+    .char-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--lotr-text);
+      margin-bottom: 0.2rem;
+    }
+    .char-meta {
+      font-size: 0.82rem;
+      color: var(--lotr-muted);
+      margin-bottom: 0.75rem;
+      font-style: italic;
+    }
+    .stat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+    .stat-badge {
+      background-color: var(--lotr-tag-bg);
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 4px;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.45rem;
+      color: var(--lotr-text);
+      letter-spacing: 0.03em;
+    }
+    .stat-badge strong { color: var(--lotr-accent); }
+
+    .view-btn {
+      display: inline-block;
+      background-color: var(--lotr-accent);
+      border: 1px solid var(--lotr-accent);
+      border-radius: 50px;
+      color: #fff8e7;
+      font-size: 0.8rem;
+      font-family: 'Georgia', serif;
+      padding: 0.3rem 1rem;
+      text-decoration: none;
+      transition: background-color 0.2s;
+      cursor: pointer;
+    }
+    .view-btn:hover { background-color: var(--lotr-accent-hover); color: #fff8e7; }
+
+    /* ── No results ────────────────────────────────────────── */
+    .no-results {
+      text-align: center;
+      color: rgba(196,163,90,0.5);
+      font-style: italic;
+      padding: 3rem 0;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Nav -->
+  <nav class="lotr-nav">
+    <a href="index.html" class="nav-brand">⚔ Middle-earth Sheets</a>
+    <div class="nav-links">
+      <a href="create.html">Create Character</a>
+      <a href="premades.html" class="active">Premade Characters</a>
+      <a href="#" id="logout-link">Log Out</a>
+    </div>
+  </nav>
+
+  <main>
+    <h1 class="page-heading">Premade Character Search</h1>
+    <p class="page-heading-sub">Choose a legendary hero of Middle-earth</p>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <input type="text" id="search-input" class="search-input" placeholder="🔍  Search characters…" />
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <span class="filter-label">Class:</span>
+      <button class="filter-pill active" data-filter-type="class" data-filter-value="">All</button>
+      <button class="filter-pill" data-filter-type="class" data-filter-value="barbarian">Barbarian</button>
+      <button class="filter-pill" data-filter-type="class" data-filter-value="cleric">Cleric</button>
+      <button class="filter-pill" data-filter-type="class" data-filter-value="rogue">Rogue</button>
+      <button class="filter-pill" data-filter-type="class" data-filter-value="sorcerer">Sorcerer</button>
+      <button class="filter-pill" data-filter-type="class" data-filter-value="wizard">Wizard</button>
+    </div>
+
+    <!-- Status / results -->
+    <div id="status-msg">Loading characters…</div>
+    <div class="card-grid" id="card-grid" style="display:none;"></div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ── Auth guard ────────────────────────────────────────────
+    // TODO: re-enable before going live
+    // if (!sessionStorage.getItem('bearerToken')) {
+    //   window.location.href = 'login.html';
+    // }
+
+    // ── Config ────────────────────────────────────────────────
+    // TODO: update base URL once Web Server / API Server is running
+    const API_BASE = 'http://localhost:5000';
+
+    function authHeaders() {
+      return { 'Authorization': `Bearer ${sessionStorage.getItem('bearerToken')}` };
+    }
+
+    // ── State ─────────────────────────────────────────────────
+    let allCharacters = [];
+    let activeClassFilter = '';
+
+    // ── Fetch premades ─────────────────────────────────────────
+    async function fetchPremades() {
+      try {
+        // TODO: GET /premades — endpoint not yet implemented
+        // Using placeholder data until API is ready
+        const response = await fetch(`${API_BASE}/premades`, { headers: authHeaders() });
+        if (response.ok) {
+          allCharacters = await response.json();
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (err) {
+        console.warn('Could not load premades from API, using placeholder data:', err);
+        // Placeholder data matching the premades DB table structure
+        allCharacters = [
+          { id: 1, name: 'Aragorn', class: 'Rogue', race: 'Human', species: 'Human',
+            stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15 } },
+          { id: 2, name: 'Gandalf', class: 'Wizard', race: 'Maia', species: 'Istar',
+            stats: { STR: 10, DEX: 11, CON: 12, INT: 20, WIS: 18, CHA: 17 } },
+          { id: 3, name: 'Legolas', class: 'Rogue', race: 'Elf', species: 'Sindarin',
+            stats: { STR: 13, DEX: 20, CON: 12, INT: 14, WIS: 15, CHA: 13 } },
+          { id: 4, name: 'Gimli', class: 'Barbarian', race: 'Dwarf', species: 'Longbeard',
+            stats: { STR: 18, DEX: 10, CON: 18, INT: 11, WIS: 12, CHA: 9 } },
+          { id: 5, name: 'Frodo Baggins', class: 'Rogue', race: 'Hobbit', species: 'Harfoot',
+            stats: { STR: 8, DEX: 16, CON: 12, INT: 13, WIS: 14, CHA: 14 } },
+          { id: 6, name: 'Saruman', class: 'Sorcerer', race: 'Maia', species: 'Istar',
+            stats: { STR: 10, DEX: 12, CON: 13, INT: 19, WIS: 15, CHA: 18 } },
+          { id: 7, name: 'Éowyn', class: 'Barbarian', race: 'Human', species: 'Rohirrim',
+            stats: { STR: 14, DEX: 15, CON: 13, INT: 12, WIS: 11, CHA: 14 } },
+          { id: 8, name: 'Boromir', class: 'Barbarian', race: 'Human', species: 'Gondorian',
+            stats: { STR: 18, DEX: 13, CON: 16, INT: 13, WIS: 11, CHA: 14 } },
+          { id: 9, name: 'Galadriel', class: 'Cleric', race: 'Elf', species: 'Noldor',
+            stats: { STR: 10, DEX: 14, CON: 12, INT: 18, WIS: 20, CHA: 20 } },
+        ];
+      }
+      renderCards();
+    }
+
+    // ── Render cards ──────────────────────────────────────────
+    function renderCards() {
+      const query  = document.getElementById('search-input').value.toLowerCase().trim();
+      const grid   = document.getElementById('card-grid');
+      const status = document.getElementById('status-msg');
+
+      let filtered = allCharacters.filter(c => {
+        const matchSearch = !query ||
+          c.name.toLowerCase().includes(query) ||
+          c.class.toLowerCase().includes(query) ||
+          c.race.toLowerCase().includes(query);
+        const matchClass = !activeClassFilter ||
+          c.class.toLowerCase() === activeClassFilter;
+        return matchSearch && matchClass;
+      });
+
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="no-results">No characters found matching your search.</div>';
+      } else {
+        filtered.forEach(c => {
+          const stats = c.stats || {};
+          const card = document.createElement('div');
+          card.className = 'char-card';
+          card.innerHTML = `
+            <div class="char-name">${c.name}</div>
+            <div class="char-meta">${c.class} · ${c.race}${c.species && c.species !== c.race ? ' (' + c.species + ')' : ''}</div>
+            <div class="stat-row">
+              ${Object.entries(stats).map(([k, v]) =>
+                `<span class="stat-badge"><strong>${k}</strong> ${v}</span>`
+              ).join('')}
+            </div>
+            <button class="view-btn">View Sheet</button>
+          `;
+          card.querySelector('.view-btn').addEventListener('click', () => selectCharacter(c));
+          grid.appendChild(card);
+        });
+      }
+
+      status.style.display = 'none';
+      grid.style.display = 'grid';
+    }
+
+    // ── Select character → go to sheet ───────────────────────
+    function selectCharacter(character) {
+      sessionStorage.setItem('currentSheet', JSON.stringify(character));
+      window.location.href = 'character-sheet.html';
+    }
+
+    // ── Search input ──────────────────────────────────────────
+    document.getElementById('search-input').addEventListener('input', renderCards);
+
+    // ── Filter pills ──────────────────────────────────────────
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.filter-pill[data-filter-type="class"]').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        activeClassFilter = pill.dataset.filterValue;
+        renderCards();
+      });
+    });
+
+    // ── Logout ────────────────────────────────────────────────
+    document.getElementById('logout-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('bearerToken');
+      window.location.href = 'login.html';
+    });
+
+    // ── Init ──────────────────────────────────────────────────
+    fetchPremades();
+  </script>
+</body>
+</html>

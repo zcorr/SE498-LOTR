@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Character Sheet — Middle-earth Character Sheets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+
+  <style>
+    :root {
+      --lotr-bg:           #1a1f14;
+      --lotr-card-bg:      #f5ead6;
+      --lotr-card-border:  #8b6914;
+      --lotr-accent:       #8b6914;
+      --lotr-accent-hover: #b38b1d;
+      --lotr-text:         #2c1f08;
+      --lotr-muted:        #7a6040;
+      --lotr-input-bg:     #fdf4e3;
+      --lotr-input-border: #c4a35a;
+      --lotr-nav-bg:       #111508;
+      --lotr-section-bg:   #ede0c0;
+      --lotr-tag-bg:       #ecdbb5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--lotr-bg);
+      background-image: radial-gradient(ellipse at 50% 0%, rgba(139,105,20,0.18) 0%, transparent 70%);
+      font-family: 'Georgia', serif;
+      color: var(--lotr-text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Nav ───────────────────────────────────────────────── */
+    nav.lotr-nav {
+      background-color: var(--lotr-nav-bg);
+      border-bottom: 1px solid var(--lotr-card-border);
+      padding: 0.65rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .nav-brand { color: #c4a35a; font-size: 1.1rem; font-weight: bold; letter-spacing: 0.05em; text-decoration: none; }
+    .nav-brand:hover { color: var(--lotr-accent-hover); }
+    .nav-links a { color: #c4a35a; text-decoration: none; font-size: 0.88rem; margin-left: 1.5rem; letter-spacing: 0.04em; opacity: 0.8; transition: opacity 0.2s; }
+    .nav-links a:hover { opacity: 1; }
+
+    /* ── Sheet wrapper ─────────────────────────────────────── */
+    main { flex: 1; padding: 1.5rem; }
+
+    .sheet-wrap {
+      background-color: var(--lotr-card-bg);
+      border: 2px solid var(--lotr-card-border);
+      border-radius: 6px;
+      max-width: 1100px;
+      margin: 0 auto;
+      box-shadow: 0 0 0 1px rgba(139,105,20,0.2), 0 8px 32px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+
+    /* ── Sheet header (character name banner) ──────────────── */
+    .sheet-header {
+      background-color: var(--lotr-section-bg);
+      border-bottom: 2px solid var(--lotr-card-border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: stretch;
+      gap: 1rem;
+    }
+
+    .header-name-block {
+      flex: 0 0 280px;
+    }
+    .char-name-display {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: var(--lotr-text);
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--lotr-card-border);
+      padding-bottom: 0.1rem;
+      margin-bottom: 0.15rem;
+    }
+    .char-name-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--lotr-muted);
+    }
+
+    .header-meta-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.4rem 1rem;
+    }
+    .meta-cell { border-bottom: 1px solid var(--lotr-card-border); padding-bottom: 0.1rem; }
+    .meta-value { font-size: 0.88rem; color: var(--lotr-text); min-height: 1.2em; }
+    .meta-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--lotr-muted); }
+
+    /* ── Toolbar (tabs + print btn) ────────────────────────── */
+    .sheet-toolbar {
+      background-color: var(--lotr-nav-bg);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--lotr-card-border);
+    }
+
+    .sheet-tabs { display: flex; gap: 0; }
+    .sheet-tab {
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: rgba(196,163,90,0.55);
+      font-family: 'Georgia', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      padding: 0.65rem 1.25rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .sheet-tab:hover { color: #c4a35a; }
+    .sheet-tab.active { color: #c4a35a; border-bottom-color: #c4a35a; }
+
+    .print-btn {
+      background: none;
+      border: 1px solid rgba(196,163,90,0.4);
+      border-radius: 4px;
+      color: rgba(196,163,90,0.6);
+      font-size: 0.78rem;
+      font-family: 'Georgia', serif;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .print-btn:hover { border-color: #c4a35a; color: #c4a35a; }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: rgba(196,163,90,0.5);
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 0.3rem 0.6rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: #c4a35a; }
+
+    /* ── Tab panels ────────────────────────────────────────── */
+    .tab-panel { display: none; padding: 1.25rem 1.5rem 1.5rem; }
+    .tab-panel.active { display: block; }
+
+    /* ── Shared field widget ───────────────────────────────── */
+    .field-box {
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 4px;
+      background-color: var(--lotr-input-bg);
+      padding: 0.3rem 0.5rem;
+      min-height: 2rem;
+      font-size: 0.9rem;
+      color: var(--lotr-text);
+    }
+    .field-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--lotr-muted);
+      margin-top: 0.2rem;
+      text-align: center;
+    }
+    .section-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--lotr-muted);
+      border-top: 1px solid var(--lotr-input-border);
+      padding-top: 0.2rem;
+      margin-top: 0.2rem;
+      text-align: center;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       TAB 1 — MAIN CHARACTER SHEET
+    ───────────────────────────────────────────────────────── */
+    .sheet-body {
+      display: grid;
+      grid-template-columns: 100px 1fr 1fr 180px;
+      gap: 1rem;
+    }
+
+    /* ── Ability scores (left column) ──────────────────────── */
+    .ability-col { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .ability-block {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.4rem 0.3rem;
+      text-align: center;
+    }
+    .ability-name {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--lotr-muted);
+      margin-bottom: 0.15rem;
+    }
+    .ability-score {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--lotr-text);
+      line-height: 1;
+    }
+    .ability-mod {
+      display: inline-block;
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      line-height: 29px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--lotr-text);
+      background-color: var(--lotr-input-bg);
+      margin-top: 0.25rem;
+    }
+
+    /* ── Center-left: saves, skills ────────────────────────── */
+    .skills-col { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .insp-prof-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .number-box {
+      background-color: var(--lotr-input-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      text-align: center;
+      padding: 0.3rem;
+    }
+    .number-box .val { font-size: 1.3rem; font-weight: bold; color: var(--lotr-text); }
+
+    .check-list {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--lotr-text);
+      padding: 0.1rem 0;
+    }
+    .check-dot {
+      width: 10px; height: 10px;
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 50%;
+      flex-shrink: 0;
+      background-color: var(--lotr-input-bg);
+    }
+    .check-dot.filled { background-color: var(--lotr-accent); border-color: var(--lotr-accent); }
+    .check-val { font-weight: bold; min-width: 22px; text-align: right; font-size: 0.78rem; }
+    .check-name { flex: 1; }
+    .check-name em { color: var(--lotr-muted); font-size: 0.72rem; }
+
+    .passive-box {
+      background-color: var(--lotr-input-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .passive-val { font-size: 1.1rem; font-weight: bold; }
+
+    .proficiency-box {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.78rem;
+      color: var(--lotr-muted);
+      min-height: 60px;
+    }
+
+    /* ── Center: combat stats ──────────────────────────────── */
+    .combat-col { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .combat-top {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+    .combat-box {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      text-align: center;
+      padding: 0.35rem 0.3rem;
+    }
+    .combat-box .val { font-size: 1.5rem; font-weight: bold; color: var(--lotr-text); }
+
+    .hp-section {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+    }
+    .hp-max-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem; }
+    .hp-max-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--lotr-muted); }
+    .hp-max-val { font-size: 0.9rem; font-weight: bold; }
+    .hp-current { background-color: var(--lotr-input-bg); border: 1px solid var(--lotr-input-border); border-radius: 4px; min-height: 36px; margin-bottom: 0.15rem; }
+
+    .dice-saves-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .dice-box, .saves-box {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.4rem 0.5rem;
+    }
+    .saves-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; margin-bottom: 0.15rem; }
+    .save-circles { display: flex; gap: 3px; }
+    .save-circle {
+      width: 12px; height: 12px;
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 50%;
+      background-color: var(--lotr-input-bg);
+    }
+    .save-circle.filled { background-color: var(--lotr-accent); }
+
+    .attacks-box {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      flex: 1;
+    }
+    .attacks-header {
+      display: grid;
+      grid-template-columns: 1fr 60px 80px;
+      gap: 0.3rem;
+      margin-bottom: 0.3rem;
+    }
+    .attacks-header span { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--lotr-muted); }
+    .attack-row {
+      display: grid;
+      grid-template-columns: 1fr 60px 80px;
+      gap: 0.3rem;
+      margin-bottom: 0.2rem;
+    }
+    .attack-cell {
+      background-color: var(--lotr-input-bg);
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 3px;
+      padding: 0.2rem 0.35rem;
+      font-size: 0.78rem;
+      min-height: 22px;
+    }
+
+    /* ── Right column: traits ──────────────────────────────── */
+    .traits-col { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .trait-box {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.5rem 0.6rem;
+      flex: 1;
+    }
+    .trait-content {
+      font-size: 0.78rem;
+      color: var(--lotr-text);
+      line-height: 1.4;
+      min-height: 40px;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       TAB 2 — BACKGROUND
+    ───────────────────────────────────────────────────────── */
+    .bg-header-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .bg-body {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1rem;
+    }
+    .bg-left { display: flex; flex-direction: column; gap: 1rem; }
+    .bg-right { display: flex; flex-direction: column; gap: 1rem; }
+
+    .bg-box {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.6rem 0.75rem;
+      flex: 1;
+    }
+    .bg-box-content {
+      min-height: 80px;
+      font-size: 0.82rem;
+      color: var(--lotr-text);
+      line-height: 1.45;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       TAB 3 — SPELLCASTING
+    ───────────────────────────────────────────────────────── */
+    .spell-header {
+      display: grid;
+      grid-template-columns: 1fr repeat(3, 120px);
+      gap: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      align-items: end;
+    }
+
+    .spell-body {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .spell-level-block {
+      background-color: var(--lotr-section-bg);
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 0.5rem 0.6rem;
+    }
+
+    .spell-level-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--lotr-input-border);
+    }
+    .spell-level-num {
+      background-color: var(--lotr-accent);
+      color: #fff8e7;
+      border-radius: 4px;
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: bold; flex-shrink: 0;
+    }
+    .spell-slots {
+      display: flex; gap: 0.5rem; flex: 1; align-items: center;
+    }
+    .spell-slots-group { display: flex; flex-direction: column; flex: 1; }
+    .spell-slots-label { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--lotr-muted); }
+    .spell-slots-val { font-size: 0.78rem; color: var(--lotr-text); font-weight: bold; }
+
+    .spell-line {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.15rem 0;
+      border-bottom: 1px solid rgba(196,163,90,0.2);
+    }
+    .spell-dot {
+      width: 10px; height: 10px;
+      border: 1.5px solid var(--lotr-card-border);
+      border-radius: 50%;
+      flex-shrink: 0;
+      background-color: var(--lotr-input-bg);
+    }
+    .spell-name { font-size: 0.78rem; color: var(--lotr-text); flex: 1; }
+
+    /* ── Print styles ──────────────────────────────────────── */
+    @media print {
+      nav.lotr-nav, .sheet-toolbar { display: none !important; }
+      body { background: white; }
+      .sheet-wrap { box-shadow: none; border: none; max-width: 100%; }
+      .tab-panel { display: block !important; page-break-before: always; }
+      .tab-panel:first-of-type { page-break-before: avoid; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Nav -->
+  <nav class="lotr-nav">
+    <a href="index.html" class="nav-brand">⚔ Middle-earth Sheets</a>
+    <div class="nav-links">
+      <a href="create.html">Create Character</a>
+      <a href="premades.html">Premade Characters</a>
+      <a href="#" id="logout-link">Log Out</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="sheet-wrap">
+
+      <!-- Character name banner -->
+      <div class="sheet-header">
+        <div class="header-name-block">
+          <div class="char-name-display" id="hdr-name">—</div>
+          <div class="char-name-label">Character Name</div>
+        </div>
+        <div class="header-meta-grid">
+          <div class="meta-cell"><div class="meta-value" id="hdr-class">—</div><div class="meta-label">Class &amp; Level</div></div>
+          <div class="meta-cell"><div class="meta-value" id="hdr-background">—</div><div class="meta-label">Background</div></div>
+          <div class="meta-cell"><div class="meta-value" id="hdr-player">—</div><div class="meta-label">Player Name</div></div>
+          <div class="meta-cell"><div class="meta-value" id="hdr-race">—</div><div class="meta-label">Race</div></div>
+          <div class="meta-cell"><div class="meta-value" id="hdr-alignment">—</div><div class="meta-label">Alignment</div></div>
+          <div class="meta-cell"><div class="meta-value" id="hdr-xp">0</div><div class="meta-label">Experience Points</div></div>
+        </div>
+      </div>
+
+      <!-- Tabs toolbar -->
+      <div class="sheet-toolbar">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <a href="javascript:history.back()" class="back-btn">← Back</a>
+          <div class="sheet-tabs">
+            <button class="sheet-tab active" data-tab="tab-main">Character</button>
+            <button class="sheet-tab" data-tab="tab-background">Background</button>
+            <button class="sheet-tab" data-tab="tab-spells">Spellcasting</button>
+          </div>
+        </div>
+        <button class="print-btn" onclick="window.print()">🖨 Print</button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           TAB 1 — MAIN SHEET
+      ════════════════════════════════════════════════════════ -->
+      <div class="tab-panel active" id="tab-main">
+        <div class="sheet-body">
+
+          <!-- Ability scores -->
+          <div class="ability-col" id="ability-col">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Saves & Skills -->
+          <div class="skills-col">
+
+            <!-- Inspiration + Proficiency Bonus -->
+            <div class="insp-prof-row">
+              <div class="number-box">
+                <div class="val" id="stat-inspiration">—</div>
+                <div class="field-label">Inspiration</div>
+              </div>
+              <div class="number-box">
+                <div class="val" id="stat-proficiency">+2</div>
+                <div class="field-label">Proficiency Bonus</div>
+              </div>
+            </div>
+
+            <!-- Saving Throws -->
+            <div class="check-list">
+              <div id="saving-throws-list"><!-- filled by JS --></div>
+              <div class="section-label">Saving Throws</div>
+            </div>
+
+            <!-- Skills -->
+            <div class="check-list">
+              <div id="skills-list"><!-- filled by JS --></div>
+              <div class="section-label">Skills</div>
+            </div>
+
+            <!-- Passive Wisdom -->
+            <div class="passive-box">
+              <span style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--lotr-muted);">Passive Wisdom (Perception)</span>
+              <span class="passive-val" id="stat-passive">10</span>
+            </div>
+
+            <!-- Other Proficiencies -->
+            <div class="proficiency-box">
+              <div style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--lotr-muted); margin-bottom:0.3rem;">Other Proficiencies &amp; Languages</div>
+              <div id="other-proficiencies" style="font-size:0.78rem; color:var(--lotr-text);">—</div>
+            </div>
+
+          </div>
+
+          <!-- Combat stats -->
+          <div class="combat-col">
+
+            <!-- AC / Initiative / Speed -->
+            <div class="combat-top">
+              <div class="combat-box">
+                <div class="val" id="stat-ac">—</div>
+                <div class="field-label">Armor Class</div>
+              </div>
+              <div class="combat-box">
+                <div class="val" id="stat-initiative">—</div>
+                <div class="field-label">Initiative</div>
+              </div>
+              <div class="combat-box">
+                <div class="val" id="stat-speed">30</div>
+                <div class="field-label">Speed</div>
+              </div>
+            </div>
+
+            <!-- Hit Points -->
+            <div class="hp-section">
+              <div class="hp-max-row">
+                <span class="hp-max-label">Hit Point Maximum</span>
+                <span class="hp-max-val" id="stat-hp-max">—</span>
+              </div>
+              <div class="hp-current" style="padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Current Hit Points</div>
+              <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Current Hit Points</div>
+              <div class="hp-current" style="margin-top:0.3rem; padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Temporary Hit Points</div>
+              <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Temporary Hit Points</div>
+            </div>
+
+            <!-- Hit Dice + Death Saves -->
+            <div class="dice-saves-row">
+              <div class="dice-box">
+                <div style="min-height:28px; font-size:0.88rem; color:var(--lotr-text); font-weight:bold;" id="stat-hit-dice">—</div>
+                <div class="section-label">Hit Dice</div>
+                <div style="display:flex; align-items:center; gap:0.3rem; margin-top:0.3rem;">
+                  <span style="font-size:0.72rem; color:var(--lotr-muted);">Total:</span>
+                  <div style="flex:1; background:var(--lotr-input-bg); border:1px solid var(--lotr-input-border); border-radius:3px; height:18px;"></div>
+                </div>
+              </div>
+              <div class="saves-box">
+                <div class="saves-row">
+                  <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Successes</span>
+                  <div class="save-circles">
+                    <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
+                  </div>
+                </div>
+                <div class="saves-row">
+                  <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Failures</span>
+                  <div class="save-circles">
+                    <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
+                  </div>
+                </div>
+                <div class="section-label">Death Saves</div>
+              </div>
+            </div>
+
+            <!-- Attacks & Spellcasting -->
+            <div class="attacks-box">
+              <div class="attacks-header">
+                <span>Name</span><span>ATK Bonus</span><span>Damage / Type</span>
+              </div>
+              <div id="attacks-list">
+                <!-- Filled by JS -->
+              </div>
+              <div class="section-label">Attacks &amp; Spellcasting</div>
+            </div>
+
+            <!-- Equipment -->
+            <div style="background:var(--lotr-section-bg); border:1.5px solid var(--lotr-card-border); border-radius:6px; padding:0.5rem 0.75rem; flex:1;">
+              <div id="equipment-content" style="font-size:0.78rem; color:var(--lotr-text); min-height:60px;">—</div>
+              <div class="section-label">Equipment</div>
+            </div>
+
+          </div>
+
+          <!-- Traits column -->
+          <div class="traits-col">
+            <div class="trait-box">
+              <div class="trait-content" id="trait-personality">—</div>
+              <div class="section-label">Personality Traits</div>
+            </div>
+            <div class="trait-box">
+              <div class="trait-content" id="trait-ideals">—</div>
+              <div class="section-label">Ideals</div>
+            </div>
+            <div class="trait-box">
+              <div class="trait-content" id="trait-bonds">—</div>
+              <div class="section-label">Bonds</div>
+            </div>
+            <div class="trait-box">
+              <div class="trait-content" id="trait-flaws">—</div>
+              <div class="section-label">Flaws</div>
+            </div>
+            <div class="trait-box" style="flex:2;">
+              <div class="trait-content" id="features-traits">—</div>
+              <div class="section-label">Features &amp; Traits</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           TAB 2 — BACKGROUND
+      ════════════════════════════════════════════════════════ -->
+      <div class="tab-panel" id="tab-background">
+
+        <!-- Background header meta -->
+        <div class="bg-header-grid">
+          <div class="meta-cell"><div class="meta-value" id="bg-age">—</div><div class="meta-label">Age</div></div>
+          <div class="meta-cell"><div class="meta-value" id="bg-height">—</div><div class="meta-label">Height</div></div>
+          <div class="meta-cell"><div class="meta-value" id="bg-weight">—</div><div class="meta-label">Weight</div></div>
+          <div class="meta-cell"><div class="meta-value" id="bg-eyes">—</div><div class="meta-label">Eyes</div></div>
+          <div class="meta-cell"><div class="meta-value" id="bg-skin">—</div><div class="meta-label">Skin</div></div>
+          <div class="meta-cell"><div class="meta-value" id="bg-hair">—</div><div class="meta-label">Hair</div></div>
+        </div>
+
+        <div class="bg-body">
+          <div class="bg-left">
+            <div class="bg-box" style="min-height:280px;">
+              <div class="bg-box-content" id="bg-appearance">—</div>
+              <div class="section-label">Character Appearance</div>
+            </div>
+            <div class="bg-box" style="flex:1;">
+              <div class="bg-box-content" id="bg-backstory">—</div>
+              <div class="section-label">Character Backstory</div>
+            </div>
+          </div>
+          <div class="bg-right">
+            <div class="bg-box" style="min-height:280px;">
+              <div class="bg-box-content" id="bg-allies">—</div>
+              <div class="section-label">Allies &amp; Organizations</div>
+            </div>
+            <div class="bg-box" style="flex:1;">
+              <div class="bg-box-content" id="bg-features">—</div>
+              <div class="section-label">Additional Features &amp; Traits</div>
+            </div>
+            <div class="bg-box">
+              <div class="bg-box-content" id="bg-treasure">—</div>
+              <div class="section-label">Treasure</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           TAB 3 — SPELLCASTING
+      ════════════════════════════════════════════════════════ -->
+      <div class="tab-panel" id="tab-spells">
+
+        <div class="spell-header">
+          <div>
+            <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--lotr-muted); margin-bottom:0.2rem;">Spellcasting Class</div>
+            <div style="font-size:1rem; color:var(--lotr-text); font-weight:bold;" id="spell-class">—</div>
+          </div>
+          <div class="number-box">
+            <div class="val" id="spell-ability">—</div>
+            <div class="field-label">Spellcasting Ability</div>
+          </div>
+          <div class="number-box">
+            <div class="val" id="spell-save-dc">—</div>
+            <div class="field-label">Spell Save DC</div>
+          </div>
+          <div class="number-box">
+            <div class="val" id="spell-atk-bonus">—</div>
+            <div class="field-label">Spell Attack Bonus</div>
+          </div>
+        </div>
+
+        <div class="spell-body" id="spell-body">
+          <!-- Populated by JS -->
+        </div>
+
+      </div>
+
+    </div><!-- /.sheet-wrap -->
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ── Auth guard ────────────────────────────────────────────
+    // TODO: re-enable before going live
+    // if (!sessionStorage.getItem('bearerToken')) {
+    //   window.location.href = 'login.html';
+    // }
+
+    // ── Load sheet data ───────────────────────────────────────
+    // Data is expected from sessionStorage, set by create.html or premades.html
+    // TODO: shape here mirrors what POST /generate and GET /premades will return
+    const raw = sessionStorage.getItem('currentSheet');
+
+    // Dev preview data — remove before going live
+    const DEV_PREVIEW = {
+      name: 'Aragorn', class: 'Rogue', race: 'Human', species: 'Gondorian',
+      background: 'Outlander', playerName: 'Kylee', alignment: 'Lawful Good', xp: '0',
+      stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15 },
+      armorClass: 14, speed: '30', hitPointMax: 44, hitDice: '5d8',
+      personalityTraits: 'I have a lesson for every situation, drawn from my time in the wild.',
+      ideals: 'Responsibility. I do what I must and obey just authority.',
+      bonds: 'I fight for those who cannot fight for themselves.',
+      flaws: 'I have trouble trusting in my allies.',
+      featuresTraits: 'Darkvision, Fey Ancestry, Thieves\' Cant, Sneak Attack 3d6',
+      proficiencies: 'Common, Elvish, Dwarvish. Thieves\' tools, disguise kit.',
+      equipment: 'Shortsword, hand crossbow, leather armor, thieves\' tools, explorer\'s pack',
+      attacks: [
+        { name: 'Shortsword', atkBonus: '+6', damage: '1d6+4 piercing' },
+        { name: 'Hand Crossbow', atkBonus: '+6', damage: '1d6+4 piercing' },
+      ],
+      age: '87', height: '6\'2"', weight: '195 lb', eyes: 'Grey', skin: 'Tan', hair: 'Dark Brown',
+      appearance: 'Tall and weather-worn, with grey eyes that hold both sorrow and determination.',
+      backstory: 'Raised by elves in Rivendell after his father\'s death, Aragorn wandered Middle-earth as the Ranger "Strider" for decades, guarding the Shire and the free peoples of the North.',
+      allies: 'The Fellowship of the Ring. Gandalf the Grey. The Rangers of the North.',
+      additionalFeatures: 'Uncanny Dodge, Evasion, Expertise (Stealth, Perception)',
+      treasure: '50 gp, a broken sword (Narsil heirloom)',
+    };
+
+    const sheet = raw ? JSON.parse(raw) : DEV_PREVIEW;
+
+    // ── Helpers ───────────────────────────────────────────────
+    function mod(score) {
+      const m = Math.floor((score - 10) / 2);
+      return (m >= 0 ? '+' : '') + m;
+    }
+    function set(id, val) {
+      const el = document.getElementById(id);
+      if (el && val !== undefined && val !== null) el.textContent = val;
+    }
+
+    // ── Ability score definitions ─────────────────────────────
+    const ABILITIES = [
+      { key: 'STR', label: 'Strength' },
+      { key: 'DEX', label: 'Dexterity' },
+      { key: 'CON', label: 'Constitution' },
+      { key: 'INT', label: 'Intelligence' },
+      { key: 'WIS', label: 'Wisdom' },
+      { key: 'CHA', label: 'Charisma' },
+    ];
+
+    const SAVING_THROWS = [
+      { key: 'STR', label: 'Strength' },
+      { key: 'DEX', label: 'Dexterity' },
+      { key: 'CON', label: 'Constitution' },
+      { key: 'INT', label: 'Intelligence' },
+      { key: 'WIS', label: 'Wisdom' },
+      { key: 'CHA', label: 'Charisma' },
+    ];
+
+    const SKILLS = [
+      { key: 'DEX', label: 'Acrobatics' },
+      { key: 'WIS', label: 'Animal Handling' },
+      { key: 'INT', label: 'Arcana' },
+      { key: 'STR', label: 'Athletics' },
+      { key: 'CHA', label: 'Deception' },
+      { key: 'INT', label: 'History' },
+      { key: 'WIS', label: 'Insight' },
+      { key: 'CHA', label: 'Intimidation' },
+      { key: 'INT', label: 'Investigation' },
+      { key: 'WIS', label: 'Medicine' },
+      { key: 'INT', label: 'Nature' },
+      { key: 'WIS', label: 'Perception' },
+      { key: 'CHA', label: 'Performance' },
+      { key: 'CHA', label: 'Persuasion' },
+      { key: 'INT', label: 'Religion' },
+      { key: 'DEX', label: 'Sleight of Hand' },
+      { key: 'DEX', label: 'Stealth' },
+      { key: 'WIS', label: 'Survival' },
+    ];
+
+    const SPELL_LEVELS = [
+      { level: 0, label: 'Cantrips', slots: false, count: 8 },
+      { level: 1, slots: true, count: 12 },
+      { level: 2, slots: true, count: 8 },
+      { level: 3, slots: true, count: 8 },
+      { level: 4, slots: true, count: 8 },
+      { level: 5, slots: true, count: 6 },
+      { level: 6, slots: true, count: 6 },
+      { level: 7, slots: true, count: 6 },
+      { level: 8, slots: true, count: 6 },
+      { level: 9, slots: true, count: 6 },
+    ];
+
+    // ── Populate ability score blocks ─────────────────────────
+    function buildAbilityCol(stats) {
+      const col = document.getElementById('ability-col');
+      col.innerHTML = '';
+      ABILITIES.forEach(a => {
+        const score = stats?.[a.key] ?? '—';
+        const modStr = (typeof score === 'number') ? mod(score) : '—';
+        col.innerHTML += `
+          <div class="ability-block">
+            <div class="ability-name">${a.label.toUpperCase()}</div>
+            <div class="ability-score">${score}</div>
+            <div class="ability-mod">${modStr}</div>
+          </div>`;
+      });
+    }
+
+    // ── Populate saving throws ────────────────────────────────
+    function buildSavingThrows(stats, profBonus) {
+      const list = document.getElementById('saving-throws-list');
+      list.innerHTML = '';
+      SAVING_THROWS.forEach(s => {
+        const score = stats?.[s.key] ?? 10;
+        const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
+        const val = (bonus >= 0 ? '+' : '') + bonus;
+        list.innerHTML += `
+          <div class="check-item">
+            <div class="check-dot"></div>
+            <span class="check-val">${val}</span>
+            <span class="check-name">${s.label}</span>
+          </div>`;
+      });
+    }
+
+    // ── Populate skills ───────────────────────────────────────
+    function buildSkills(stats) {
+      const list = document.getElementById('skills-list');
+      list.innerHTML = '';
+      SKILLS.forEach(s => {
+        const score = stats?.[s.key] ?? 10;
+        const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
+        const val = (bonus >= 0 ? '+' : '') + bonus;
+        list.innerHTML += `
+          <div class="check-item">
+            <div class="check-dot"></div>
+            <span class="check-val">${val}</span>
+            <span class="check-name">${s.label} <em>(${s.key})</em></span>
+          </div>`;
+      });
+    }
+
+    // ── Populate attacks ──────────────────────────────────────
+    function buildAttacks(attacks) {
+      const list = document.getElementById('attacks-list');
+      list.innerHTML = '';
+      const rows = attacks ?? [{}, {}, {}];
+      rows.slice(0, 5).forEach(a => {
+        list.innerHTML += `
+          <div class="attack-row">
+            <div class="attack-cell">${a.name ?? ''}</div>
+            <div class="attack-cell">${a.atkBonus ?? ''}</div>
+            <div class="attack-cell">${a.damage ?? ''}</div>
+          </div>`;
+      });
+      // Fill remaining empty rows
+      for (let i = rows.length; i < 3; i++) {
+        list.innerHTML += `
+          <div class="attack-row">
+            <div class="attack-cell"></div>
+            <div class="attack-cell"></div>
+            <div class="attack-cell"></div>
+          </div>`;
+      }
+    }
+
+    // ── Populate spell levels ─────────────────────────────────
+    function buildSpells(spells) {
+      const body = document.getElementById('spell-body');
+      body.innerHTML = '';
+      SPELL_LEVELS.forEach(sl => {
+        const spellList = spells?.[sl.level] ?? [];
+        let slotsHtml = '';
+        if (sl.slots) {
+          slotsHtml = `
+            <div class="spell-slots">
+              <div class="spell-slots-group">
+                <div class="spell-slots-label">Slots Total</div>
+                <div class="spell-slots-val">—</div>
+              </div>
+              <div class="spell-slots-group">
+                <div class="spell-slots-label">Slots Expended</div>
+                <div class="spell-slots-val">—</div>
+              </div>
+            </div>`;
+        }
+        let linesHtml = '';
+        for (let i = 0; i < sl.count; i++) {
+          const name = spellList[i] ?? '';
+          linesHtml += `
+            <div class="spell-line">
+              ${sl.slots ? '<div class="spell-dot"></div>' : ''}
+              <div class="spell-name">${name}</div>
+            </div>`;
+        }
+        body.innerHTML += `
+          <div class="spell-level-block">
+            <div class="spell-level-header">
+              <div class="spell-level-num">${sl.level}</div>
+              ${sl.label ? `<span style="font-size:0.78rem; color:var(--lotr-muted); font-weight:bold;">${sl.label}</span>` : ''}
+              ${slotsHtml}
+            </div>
+            ${linesHtml}
+          </div>`;
+      });
+    }
+
+    // ── Main populate function ────────────────────────────────
+    function populateSheet(s) {
+      if (!s) {
+        // No data — show placeholders
+        buildAbilityCol(null);
+        buildSavingThrows(null);
+        buildSkills(null);
+        buildAttacks(null);
+        buildSpells(null);
+        return;
+      }
+
+      const stats = s.stats ?? {};
+
+      // Header
+      set('hdr-name',       s.name ?? '—');
+      set('hdr-class',      s.class ? `${s.class} 1` : '—');
+      set('hdr-background', s.background ?? '—');
+      set('hdr-player',     s.playerName ?? '—');
+      set('hdr-race',       s.race ?? '—');
+      set('hdr-alignment',  s.alignment ?? '—');
+      set('hdr-xp',         s.xp ?? '0');
+
+      // Combat stats
+      set('stat-ac',          s.armorClass ?? (10 + Math.floor(((stats.DEX ?? 10) - 10) / 2)));
+      set('stat-initiative',  mod(stats.DEX ?? 10));
+      set('stat-speed',       s.speed ?? '30');
+      set('stat-hp-max',      s.hitPointMax ?? '—');
+      set('stat-hit-dice',    s.hitDice ?? '1d8');
+      set('stat-proficiency', '+2');
+
+      // Passive wisdom
+      const wisBonus = Math.floor(((stats.WIS ?? 10) - 10) / 2);
+      set('stat-passive', 10 + wisBonus);
+
+      // Traits
+      set('trait-personality', s.personalityTraits ?? '—');
+      set('trait-ideals',      s.ideals ?? '—');
+      set('trait-bonds',       s.bonds ?? '—');
+      set('trait-flaws',       s.flaws ?? '—');
+      set('features-traits',   s.featuresTraits ?? '—');
+      set('other-proficiencies', s.proficiencies ?? 'Common');
+      set('equipment-content', s.equipment ?? '—');
+
+      // Ability scores
+      buildAbilityCol(stats);
+      buildSavingThrows(stats);
+      buildSkills(stats);
+      buildAttacks(s.attacks);
+
+      // Background tab
+      set('bg-age',       s.age ?? '—');
+      set('bg-height',    s.height ?? '—');
+      set('bg-weight',    s.weight ?? '—');
+      set('bg-eyes',      s.eyes ?? '—');
+      set('bg-skin',      s.skin ?? '—');
+      set('bg-hair',      s.hair ?? '—');
+      set('bg-appearance', s.appearance ?? '—');
+      set('bg-backstory',  s.backstory ?? '—');
+      set('bg-allies',     s.allies ?? '—');
+      set('bg-features',   s.additionalFeatures ?? '—');
+      set('bg-treasure',   s.treasure ?? '—');
+
+      // Spellcasting tab
+      const spellcastingClasses = ['Cleric', 'Sorcerer', 'Wizard'];
+      const isSpellcaster = spellcastingClasses.includes(s.class);
+      set('spell-class',     isSpellcaster ? s.class : '—');
+      set('spell-ability',   isSpellcaster ? (s.class === 'Wizard' ? 'INT' : s.class === 'Cleric' ? 'WIS' : 'CHA') : '—');
+      set('spell-save-dc',   isSpellcaster ? (8 + 2 + Math.floor(((stats.INT ?? 10) - 10) / 2)) : '—');
+      set('spell-atk-bonus', isSpellcaster ? mod(stats.INT ?? 10) : '—');
+      buildSpells(s.spells);
+    }
+
+    populateSheet(sheet);
+
+    // ── Tab switching ─────────────────────────────────────────
+    document.querySelectorAll('.sheet-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── Logout ────────────────────────────────────────────────
+    document.getElementById('logout-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('bearerToken');
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>
