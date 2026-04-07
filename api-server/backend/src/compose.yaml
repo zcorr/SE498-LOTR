@@ -21,6 +21,9 @@ services:
       POSTGRES_DB: lotr
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    volumes:
+      # Runs 001_*.sql … 006_*.sql on first Postgres volume init (app also bootstraps on startup).
+      - ./database/schema:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
     healthcheck:

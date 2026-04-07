@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS classes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
-    description TEXT
+    description TEXT,
+    racial_ids INTEGER[] NOT NULL DEFAULT '{}'::integer[]
 );

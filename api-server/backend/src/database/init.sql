@@ -9,3 +9,4 @@ SET client_min_messages TO warning;
 \i schema/003_stats.sql
 \i schema/004_abilities.sql
 \i schema/005_premades.sql
+\i schema/006_seed.sql
