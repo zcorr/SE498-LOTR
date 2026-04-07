@@ -289,23 +289,23 @@
         console.warn('Could not load premades from API, using placeholder data:', err);
         // Placeholder data matching the premades DB table structure
         allCharacters = [
-          { id: 1, name: 'Aragorn', class: 'Rogue', race: 'Human', species: 'Human',
+          { id: 1, name: 'Aragorn', class: 'Rogue', race: 'Human',
             stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15 } },
-          { id: 2, name: 'Gandalf', class: 'Wizard', race: 'Maia', species: 'Istar',
+          { id: 2, name: 'Gandalf', class: 'Wizard', race: 'Maia',
             stats: { STR: 10, DEX: 11, CON: 12, INT: 20, WIS: 18, CHA: 17 } },
-          { id: 3, name: 'Legolas', class: 'Rogue', race: 'Elf', species: 'Sindarin',
+          { id: 3, name: 'Legolas', class: 'Rogue', race: 'Elf',
             stats: { STR: 13, DEX: 20, CON: 12, INT: 14, WIS: 15, CHA: 13 } },
-          { id: 4, name: 'Gimli', class: 'Barbarian', race: 'Dwarf', species: 'Longbeard',
+          { id: 4, name: 'Gimli', class: 'Barbarian', race: 'Dwarf',
             stats: { STR: 18, DEX: 10, CON: 18, INT: 11, WIS: 12, CHA: 9 } },
-          { id: 5, name: 'Frodo Baggins', class: 'Rogue', race: 'Hobbit', species: 'Harfoot',
+          { id: 5, name: 'Frodo Baggins', class: 'Rogue', race: 'Hobbit',
             stats: { STR: 8, DEX: 16, CON: 12, INT: 13, WIS: 14, CHA: 14 } },
-          { id: 6, name: 'Saruman', class: 'Sorcerer', race: 'Maia', species: 'Istar',
+          { id: 6, name: 'Saruman', class: 'Sorcerer', race: 'Maia',
             stats: { STR: 10, DEX: 12, CON: 13, INT: 19, WIS: 15, CHA: 18 } },
-          { id: 7, name: 'Éowyn', class: 'Barbarian', race: 'Human', species: 'Rohirrim',
+          { id: 7, name: 'Éowyn', class: 'Barbarian', race: 'Human',
             stats: { STR: 14, DEX: 15, CON: 13, INT: 12, WIS: 11, CHA: 14 } },
-          { id: 8, name: 'Boromir', class: 'Barbarian', race: 'Human', species: 'Gondorian',
+          { id: 8, name: 'Boromir', class: 'Barbarian', race: 'Human',
             stats: { STR: 18, DEX: 13, CON: 16, INT: 13, WIS: 11, CHA: 14 } },
-          { id: 9, name: 'Galadriel', class: 'Cleric', race: 'Elf', species: 'Noldor',
+          { id: 9, name: 'Galadriel', class: 'Cleric', race: 'Elf',
             stats: { STR: 10, DEX: 14, CON: 12, INT: 18, WIS: 20, CHA: 20 } },
         ];
       }
@@ -339,7 +339,7 @@
           card.className = 'char-card';
           card.innerHTML = `
             <div class="char-name">${c.name}</div>
-            <div class="char-meta">${c.class} · ${c.race}${c.species && c.species !== c.race ? ' (' + c.species + ')' : ''}</div>
+            <div class="char-meta">${c.class} · ${c.race}</div>
             <div class="stat-row">
               ${Object.entries(stats).map(([k, v]) =>
                 `<span class="stat-badge"><strong>${k}</strong> ${v}</span>`

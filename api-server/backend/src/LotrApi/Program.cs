@@ -20,7 +20,6 @@
 //   GET  /strength     -> strength values
 //   GET  /abilities    -> abilities list (id, name, desc, class_id)
 //   GET  /race         -> races (id, name, modifiers)
-//   GET  /species      -> species (id, name, traits)
 //   GET  /premades     -> premade sheets incl. class_id, race_id, stats JSON
 //   GET  /names        -> available character name strings
 //   POST /generate     -> body: class_id, race_id; returns full generated sheet
