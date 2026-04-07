@@ -31,6 +31,8 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 // Get the connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -40,7 +42,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 // Server health (SCRUM-11 / SPEC).
