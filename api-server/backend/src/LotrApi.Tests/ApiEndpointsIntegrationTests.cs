@@ -6,18 +6,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 namespace LotrApi.Tests;
 
 /// <summary>
-/// Integration tests for SPEC API routes (red phase: API has no mappings yet).
-/// Implement endpoints in Program.cs (or controllers) until these pass.
+/// Integration tests for SPEC API routes against a real PostgreSQL instance (Testcontainers).
 /// </summary>
-public class ApiEndpointsIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture>
 {
     private readonly HttpClient _client;
 
-    public ApiEndpointsIntegrationTests(WebApplicationFactory<Program> factory) =>
-        _client = factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
+    public ApiEndpointsIntegrationTests(LotrApiPostgresFixture fixture) =>
+        _client = fixture.Client;
 
     // --- Server health (SCRUM-11 / SPEC: GET /health = API liveness) ---
 
@@ -90,16 +86,6 @@ public class ApiEndpointsIntegrationTests : IClassFixture<WebApplicationFactory<
     public async Task GetRace_Returns200_AndJsonArray()
     {
         var response = await _client.GetAsync("/race");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
-    }
-
-    [Fact]
-    public async Task GetSpecies_Returns200_AndJsonArray()
-    {
-        var response = await _client.GetAsync("/species");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());

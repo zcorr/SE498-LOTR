@@ -294,11 +294,11 @@
       try {
         // TODO: GET /class and GET /race — endpoints not yet implemented
         // Placeholder options until API is ready
-        const classes  = ['Barbarian', 'Cleric', 'Rogue', 'Sorcerer', 'Wizard'];
-        const race  = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Orc'];
+        const classes = ['Barbarian', 'Cleric', 'Rogue', 'Sorcerer', 'Wizard'];
+        const races   = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Orc'];
 
-        const classSelect   = document.getElementById('class-select');
-        const raceSelect = document.getElementById('race-select');
+        const classSelect = document.getElementById('class-select');
+        const raceSelect  = document.getElementById('race-select');
 
         classes.forEach(c => {
           const opt = document.createElement('option');
@@ -307,10 +307,10 @@
           classSelect.appendChild(opt);
         });
 
-        race.forEach(s => {
+        races.forEach(r => {
           const opt = document.createElement('option');
-          opt.value = s.toLowerCase();
-          opt.textContent = s;
+          opt.value = r.toLowerCase();
+          opt.textContent = r;
           raceSelect.appendChild(opt);
         });
 

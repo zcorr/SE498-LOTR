@@ -1,5 +1,7 @@
 # SE498-LOTR
 
+[![CI](https://github.com/zcorr/SE498-LOTR/actions/workflows/ci.yml/badge.svg)](https://github.com/zcorr/SE498-LOTR/actions/workflows/ci.yml)
+
 SE498-LOTR is a Lord of the Rings themed character generator that translates iconic Tolkien characters into playable Dungeons & Dragons character sheets. The goal is to make it easy for fans to browse familiar heroes, generate lore-informed builds, customize them for a campaign, and save or share the final result.
 
 ## Overview
@@ -72,3 +74,34 @@ Users can explore a library of characters, search for specific names, generate a
 ## Project Vision
 
 SE498-LOTR aims to sit between fandom and tabletop play: a tool that lets users bring recognizable Middle-earth characters to the table with less setup, more flavor, and enough flexibility to fit their group’s campaign.
+
+## Running Tests Locally
+
+### Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- PostgreSQL 14+ running locally (or via Docker)
+
+### Set up the test database
+
+```bash
+# Using the Makefile (requires psql on PATH and a local Postgres instance)
+make test-schema
+
+# Or manually:
+createdb lotr_test
+cd api-server/backend/src/database
+psql -d lotr_test -f reset.sql
+psql -d lotr_test -f init.sql
+```
+
+### Run the C# unit/integration tests
+
+```bash
+# Set the connection string for the test database
+export ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=lotr_test;Username=$(whoami);Password="
+
+dotnet test api-server/backend/LotrApi.slnx --verbosity normal
+```
+
+The CI workflow (`.github/workflows/ci.yml`) runs the same steps automatically on every push and pull request.
