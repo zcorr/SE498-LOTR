@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Character — Middle-earth Character Sheets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+
+  <style>
+    :root {
+      --lotr-bg:           #1a1f14;
+      --lotr-card-bg:      #f5ead6;
+      --lotr-card-border:  #8b6914;
+      --lotr-accent:       #8b6914;
+      --lotr-accent-hover: #b38b1d;
+      --lotr-text:         #2c1f08;
+      --lotr-muted:        #7a6040;
+      --lotr-input-bg:     #fdf4e3;
+      --lotr-input-border: #c4a35a;
+      --lotr-nav-bg:       #111508;
+      --lotr-error:        #8b1a1a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--lotr-bg);
+      background-image: radial-gradient(ellipse at 50% 0%, rgba(139,105,20,0.18) 0%, transparent 70%);
+      font-family: 'Georgia', serif;
+      color: var(--lotr-text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Nav ───────────────────────────────────────────────── */
+    nav.lotr-nav {
+      background-color: var(--lotr-nav-bg);
+      border-bottom: 1px solid var(--lotr-card-border);
+      padding: 0.65rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      color: #c4a35a;
+      font-size: 1.1rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+    }
+    .nav-brand:hover { color: var(--lotr-accent-hover); }
+    .nav-links a {
+      color: #c4a35a;
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin-left: 1.5rem;
+      letter-spacing: 0.04em;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; }
+    .nav-links a.active { opacity: 1; border-bottom: 1px solid #c4a35a; }
+
+    /* ── Main content ──────────────────────────────────────── */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    /* ── Card ──────────────────────────────────────────────── */
+    .page-card {
+      background-color: var(--lotr-card-bg);
+      border: 2px solid var(--lotr-card-border);
+      border-radius: 6px;
+      padding: 2.5rem 2.75rem 2.25rem;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 0 0 1px rgba(139,105,20,0.25), 0 8px 32px rgba(0,0,0,0.6);
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--lotr-text);
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.04em;
+    }
+    .page-subtitle {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--lotr-muted);
+      font-style: italic;
+      margin-bottom: 0;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid var(--lotr-card-border);
+      margin: 0.6rem 0 1.75rem;
+      opacity: 0.5;
+    }
+
+    /* ── Form labels ───────────────────────────────────────── */
+    .form-label {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--lotr-muted);
+      margin-bottom: 0.3rem;
+    }
+
+    /* ── Inputs & selects ──────────────────────────────────── */
+    .form-control,
+    .form-select {
+      background-color: var(--lotr-input-bg);
+      border: 1.5px solid var(--lotr-input-border);
+      border-radius: 50px;
+      color: var(--lotr-text);
+      padding: 0.55rem 1.1rem;
+      font-size: 0.95rem;
+      font-family: 'Georgia', serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b6914' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+    .form-control {
+      background-image: none;
+      padding-right: 1.1rem;
+    }
+    .form-control::placeholder { color: var(--lotr-muted); opacity: 0.7; }
+    .form-control:focus,
+    .form-select:focus {
+      background-color: var(--lotr-input-bg);
+      border-color: var(--lotr-accent);
+      box-shadow: 0 0 0 3px rgba(139,105,20,0.2);
+      color: var(--lotr-text);
+      outline: none;
+    }
+    .form-select option { background-color: var(--lotr-input-bg); }
+
+    /* ── Submit button ─────────────────────────────────────── */
+    .btn-lotr {
+      background-color: var(--lotr-accent);
+      border: 1.5px solid var(--lotr-accent);
+      border-radius: 50px;
+      color: #fff8e7;
+      font-size: 1rem;
+      font-family: 'Georgia', serif;
+      letter-spacing: 0.05em;
+      padding: 0.5rem 2.5rem;
+      transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+    }
+    .btn-lotr:hover { background-color: var(--lotr-accent-hover); border-color: var(--lotr-accent-hover); color: #fff8e7; transform: translateY(-1px); }
+    .btn-lotr:active { transform: translateY(0); }
+    .btn-lotr:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    /* ── Alert ─────────────────────────────────────────────── */
+    #alert-box { display: none; border-radius: 6px; font-size: 0.9rem; padding: 0.6rem 1rem; margin-bottom: 1rem; }
+    #alert-box.error  { display: block; background-color: #f8d7d7; border: 1px solid var(--lotr-error); color: var(--lotr-error); }
+    #alert-box.success{ display: block; background-color: #d4edda; border: 1px solid #276432; color: #276432; }
+
+    .spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.15em; }
+
+    /* ── Separator ─────────────────────────────────────────── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+      color: var(--lotr-muted);
+      font-size: 0.82rem;
+    }
+    .or-divider::before,
+    .or-divider::after {
+      content: '';
+      flex: 1;
+      border-top: 1px solid var(--lotr-input-border);
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Nav -->
+  <nav class="lotr-nav">
+    <a href="index.html" class="nav-brand">⚔ Middle-earth Sheets</a>
+    <div class="nav-links">
+      <a href="create.html" class="active">Create Character</a>
+      <a href="premades.html">Premade Characters</a>
+      <a href="#" id="logout-link">Log Out</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-card">
+
+      <h1 class="page-title">Create Character</h1>
+      <p class="page-subtitle">Choose a class and species to forge your hero</p>
+      <hr class="divider" />
+
+      <div id="alert-box" role="alert"></div>
+
+      <form id="create-form" novalidate>
+
+        <!-- Character Name -->
+        <div class="mb-3">
+          <label class="form-label" for="char-name">Character Name</label>
+          <input type="text" id="char-name" class="form-control" placeholder="e.g. Aragorn" />
+        </div>
+
+        <!-- Class + Species row -->
+        <div class="row g-3 mb-4">
+          <div class="col-6">
+            <label class="form-label" for="class-select">Class</label>
+            <select id="class-select" class="form-select" required>
+              <option value="" disabled selected>Class</option>
+              <!-- TODO: populate dynamically from GET /class -->
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="species-select">Species</label>
+            <select id="species-select" class="form-select" required>
+              <option value="" disabled selected>Species</option>
+              <!-- TODO: populate dynamically from GET /species -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Create button -->
+        <div class="d-flex justify-content-center">
+          <button type="submit" id="submit-btn" class="btn btn-lotr">
+            <span id="btn-label">Create Character</span>
+            <span id="btn-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="or-divider">or</div>
+
+      <!-- Link to premades -->
+      <p style="text-align:center; color:var(--lotr-muted); font-size:0.88rem; margin:0;">
+        Looking for a premade hero?
+        <a href="premades.html" style="color:var(--lotr-accent); text-decoration:underline;">Browse premade characters</a>
+      </p>
+
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ── Auth guard ────────────────────────────────────────────
+    // TODO: re-enable before going live
+    // if (!sessionStorage.getItem('bearerToken')) {
+    //   window.location.href = 'login.html';
+    // }
+
+    // ── Config ────────────────────────────────────────────────
+    // TODO: update base URL once Web Server is running
+    const API_BASE = 'http://localhost:5000';
+
+    const alertBox   = document.getElementById('alert-box');
+    const submitBtn  = document.getElementById('submit-btn');
+    const btnLabel   = document.getElementById('btn-label');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    function showAlert(msg, type = 'error') { alertBox.textContent = msg; alertBox.className = type; }
+    function clearAlert() { alertBox.className = ''; alertBox.textContent = ''; }
+    function setLoading(v) {
+      submitBtn.disabled = v;
+      btnSpinner.classList.toggle('d-none', !v);
+      btnLabel.textContent = v ? 'Generating…' : 'Create Character';
+    }
+
+    function authHeaders() {
+      return {
+        'Authorization': `Bearer ${sessionStorage.getItem('bearerToken')}`,
+        'Content-Type': 'application/json',
+      };
+    }
+
+    // ── Populate dropdowns from API ───────────────────────────
+    async function loadDropdowns() {
+      try {
+        // TODO: GET /class and GET /species — endpoints not yet implemented
+        // Placeholder options until API is ready
+        const classes  = ['Barbarian', 'Cleric', 'Rogue', 'Sorcerer', 'Wizard'];
+        const species  = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Orc'];
+
+        const classSelect   = document.getElementById('class-select');
+        const speciesSelect = document.getElementById('species-select');
+
+        classes.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.toLowerCase();
+          opt.textContent = c;
+          classSelect.appendChild(opt);
+        });
+
+        species.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.toLowerCase();
+          opt.textContent = s;
+          speciesSelect.appendChild(opt);
+        });
+
+      } catch (err) {
+        console.warn('Could not load dropdown data from API:', err);
+      }
+    }
+    loadDropdowns();
+
+    // ── Form submit ───────────────────────────────────────────
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+
+      const charName = document.getElementById('char-name').value.trim();
+      const classId  = document.getElementById('class-select').value;
+      const speciesId = document.getElementById('species-select').value;
+
+      if (!classId || !speciesId) {
+        showAlert('Please select both a class and a species.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        // TODO: POST /generate — endpoint not yet implemented
+        // Expected request body & response shape TBD with API team
+        const response = await fetch(`${API_BASE}/generate`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ name: charName, classId, speciesId }),
+        });
+
+        if (response.ok) {
+          const sheet = await response.json();
+          // Pass sheet data to character-sheet page via sessionStorage
+          sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
+          window.location.href = 'character-sheet.html';
+        } else if (response.status === 401) {
+          sessionStorage.removeItem('bearerToken');
+          window.location.href = 'login.html';
+        } else {
+          showAlert(`Error generating character (${response.status}). Please try again.`);
+        }
+      } catch (err) {
+        showAlert('Could not reach the server. Please check your connection.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // ── Logout ────────────────────────────────────────────────
+    document.getElementById('logout-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('bearerToken');
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>
