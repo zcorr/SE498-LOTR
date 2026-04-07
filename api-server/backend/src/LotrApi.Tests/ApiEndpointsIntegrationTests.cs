@@ -97,16 +97,6 @@ public class ApiEndpointsIntegrationTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
-    public async Task GetSpecies_Returns200_AndJsonArray()
-    {
-        var response = await _client.GetAsync("/species");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
-    }
-
-    [Fact]
     public async Task GetPremades_Returns200_AndJsonArray()
     {
         var response = await _client.GetAsync("/premades");

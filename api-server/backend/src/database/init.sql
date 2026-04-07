@@ -7,6 +7,5 @@ SET client_min_messages TO warning;
 \i schema/001_classes.sql
 \i schema/002_races.sql
 \i schema/003_stats.sql
-\i schema/004_species.sql
-\i schema/005_abilities.sql
-\i schema/006_premades.sql
+\i schema/004_abilities.sql
+\i schema/005_premades.sql

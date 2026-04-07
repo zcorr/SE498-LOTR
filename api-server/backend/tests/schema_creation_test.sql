@@ -192,11 +192,6 @@ SELECT pg_temp.assert_columns('stats', ARRAY['id', 'name', 'base_value']);
 SELECT pg_temp.assert_primary_key('stats', ARRAY['id']);
 SELECT pg_temp.assert_unique_key('stats', ARRAY['name']);
 
-SELECT pg_temp.assert_table_exists('species');
-SELECT pg_temp.assert_columns('species', ARRAY['id', 'name', 'traits']);
-SELECT pg_temp.assert_primary_key('species', ARRAY['id']);
-SELECT pg_temp.assert_unique_key('species', ARRAY['name']);
-
 SELECT pg_temp.assert_table_exists('abilities');
 SELECT pg_temp.assert_columns('abilities', ARRAY['id', 'name', 'description', 'class_id']);
 SELECT pg_temp.assert_primary_key('abilities', ARRAY['id']);

@@ -28,7 +28,7 @@
 
 This project is a web-based **Lord of the Rings themed board game character sheet manager**. Users can log in, create new character sheets, or select from premade characters (e.g., Aragorn, Gandalf).
 
-Character data includes class, race, abilities, stats, and species. It is generated and stored via a **two-server architecture**: a C# MVC Web Server handling user sessions, and a separate C# Web API server managing in-game data and character generation.
+Character data includes class, race, abilities, and stats. It is generated and stored via a **two-server architecture**: a C# MVC Web Server handling user sessions, and a separate C# Web API server managing in-game data and character generation.
 
 ---
 
@@ -81,7 +81,7 @@ Frontend ←→ Web Server (RPC) ←→ API Server (REST)
 
 ### API Server (C# Web API)
 
-11 exposed REST endpoints:
+10 exposed REST endpoints:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -92,12 +92,11 @@ Frontend ←→ Web Server (RPC) ←→ API Server (REST)
 | `GET` | `/strength` | Returns character strength values |
 | `GET` | `/abilities` | Returns character abilities list |
 | `GET` | `/race` | Returns character race |
-| `GET` | `/species` | Returns character species |
 | `GET` | `/premades` | Returns premade sheets |
 | `GET` | `/names` | Returns available character names |
 | `POST` | `/generate` | Returns a fully completed character sheet |
 
-The API server reads/writes to its own DB containing: Classes, Abilities, Race, Stats, Species, and Premades.
+The API server reads/writes to its own DB containing: Classes, Abilities, Race, Stats, and Premades.
 
 **Example response for `GET /class/1`:**
 
@@ -153,7 +152,6 @@ Three-tier architecture: **Frontend → Web Server → API Server**
 | `Abilities` | id, name, desc, class_id |
 | `Race` | id, name, modifiers |
 | `Stats` | id, name, base_value |
-| `Species` | id, name, traits |
 | `Premades` | id, name, class_id, race_id, stats (JSON) |
 
 **Naming (health):** `GET /health` is **server** liveness only. Character health is **`GET /charhealth`**. In data, use stat name **`charhealth`** in `Stats` and key **`charhealth`** in `Premades.stats` JSON (not `health`).
