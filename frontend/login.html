@@ -325,7 +325,7 @@
 
           // TODO: update redirect target once the main app page exists
           setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'premades.html';
           }, 800);
 
         } else if (response.status === 401) {
@@ -347,7 +347,7 @@
     //  If already logged in, skip to main page
     // ─────────────────────────────────────────────────────────
     if (sessionStorage.getItem('bearerToken')) {
-      window.location.href = 'index.html';
+      window.location.href = 'premades.html';
     }
   </script>
 </body>
