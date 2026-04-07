@@ -178,7 +178,7 @@ END;
 $$;
 
 SELECT pg_temp.assert_table_exists('classes');
-SELECT pg_temp.assert_columns('classes', ARRAY['id', 'name', 'description']);
+SELECT pg_temp.assert_columns('classes', ARRAY['id', 'name', 'description', 'racial_ids']);
 SELECT pg_temp.assert_primary_key('classes', ARRAY['id']);
 SELECT pg_temp.assert_unique_key('classes', ARRAY['name']);
 
