@@ -1,5 +1,8 @@
-namespace web_server.Controllers;
+namespace web_server.Services;
 
-public class IAuthService {
-	
+public interface IAuthService
+{
+    Task<string?> AuthenticateUserAsync(string username, string password);
+    bool ValidateToken(string token);
+    string? GetUserFromToken(string token);
 }
