@@ -18,6 +18,13 @@ public class AuthController : Controller
     [AllowAnonymous]
     public IActionResult Login()
     {
+        // Check if user is already authenticated via cookie
+        var token = Request.Cookies["AuthToken"];
+        if (!string.IsNullOrWhiteSpace(token) && _authService.ValidateToken(token))
+        {
+            return Redirect("/Premade");
+        }
+
         try
         {
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "frontend", "login.html");
