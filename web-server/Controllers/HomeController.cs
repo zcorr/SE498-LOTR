@@ -16,6 +16,11 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult Login()
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
