@@ -57,6 +57,37 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
     }
 
     [Fact]
+    public async Task GetStatByName_Returns200_ForKnownStat()
+    {
+        var response = await _client.GetAsync("/stats/strength");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal("strength", root.GetProperty("name").GetString());
+        Assert.True(root.GetProperty("id").GetInt32() > 0);
+        Assert.True(root.GetProperty("baseValue").GetInt32() > 0);
+    }
+
+    [Fact]
+    public async Task GetStatByName_IsCaseInsensitive()
+    {
+        var response = await _client.GetAsync("/stats/Strength");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("strength", doc.RootElement.GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task GetStatByName_Returns404_ForUnknownStat()
+    {
+        var response = await _client.GetAsync("/stats/not-a-real-stat");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task GetCharHealth_Returns200_CharacterHealthPayload()
     {
         var response = await _client.GetAsync("/charhealth");
