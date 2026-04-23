@@ -11,9 +11,13 @@ namespace LotrApi.Tests;
 public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture>
 {
     private readonly HttpClient _client;
+    private readonly LotrApiPostgresFixture _fixture;
 
-    public ApiEndpointsIntegrationTests(LotrApiPostgresFixture fixture) =>
+    public ApiEndpointsIntegrationTests(LotrApiPostgresFixture fixture)
+    {
+        _fixture = fixture;
         _client = fixture.Client;
+    }
 
     // --- Server health (SCRUM-11 / SPEC: GET /health = API liveness) ---
 
@@ -103,6 +107,71 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
     }
 
     [Fact]
+    public async Task GetPremades_ReturnsSeededLotrLibrary_WithCompleteStatsAndCoverage()
+    {
+        var response = await _client.GetAsync("/premades");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var premades = doc.RootElement.EnumerateArray().ToList();
+        var expectedNames = new[]
+        {
+            "Gandalf the Grey",
+            "Frodo",
+            "Samwise Gamgee",
+            "Aragorn",
+            "Legolas",
+            "Gimli",
+            "Boromir",
+            "Gollum",
+            "Galadriel",
+            "Saruman the White",
+        };
+        var expectedStats = new[]
+        {
+            "charhealth",
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma",
+        };
+
+        Assert.True(premades.Count >= 10, $"Expected at least 10 premades but found {premades.Count}.");
+        var names = premades
+            .Select(p => p.GetProperty("name").GetString())
+            .OfType<string>()
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var expectedName in expectedNames)
+            Assert.Contains(expectedName, names);
+
+        var distinctClassIds = new HashSet<int>();
+        var distinctRaceIds = new HashSet<int>();
+
+        foreach (var premade in premades)
+        {
+            var classId = premade.GetProperty("class_id").GetInt32();
+            var raceId = premade.GetProperty("race_id").GetInt32();
+            var stats = premade.GetProperty("stats");
+
+            Assert.True(classId > 0);
+            Assert.True(raceId > 0);
+            Assert.Equal(JsonValueKind.Object, stats.ValueKind);
+
+            foreach (var statName in expectedStats)
+                Assert.True(stats.TryGetProperty(statName, out _), $"Missing stat '{statName}' for {premade.GetProperty("name").GetString()}.");
+
+            distinctClassIds.Add(classId);
+            distinctRaceIds.Add(raceId);
+        }
+
+        Assert.True(distinctClassIds.Count >= 3, $"Expected at least 3 classes but found {distinctClassIds.Count}.");
+        Assert.True(distinctRaceIds.Count >= 3, $"Expected at least 3 races but found {distinctRaceIds.Count}.");
+    }
+
+    [Fact]
     public async Task GetNames_Returns200_AndJsonArrayOfStrings()
     {
         var response = await _client.GetAsync("/names");
@@ -110,6 +179,51 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+    }
+
+    [Fact]
+    public async Task GetNames_ReturnsEverySeededLotrName()
+    {
+        var response = await _client.GetAsync("/names");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var names = doc.RootElement
+            .EnumerateArray()
+            .Select(name => name.GetString())
+            .OfType<string>()
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var expectedName in new[]
+                 {
+                     "Gandalf the Grey",
+                     "Frodo",
+                     "Samwise Gamgee",
+                     "Aragorn",
+                     "Legolas",
+                     "Gimli",
+                     "Boromir",
+                     "Gollum",
+                     "Galadriel",
+                     "Saruman the White",
+                 })
+        {
+            Assert.Contains(expectedName, names);
+        }
+    }
+
+    [Fact]
+    public async Task DatabaseBootstrap_CanRunTwice_WithoutDuplicatingPremades()
+    {
+        var before = await GetPremadeNamesAsync();
+
+        await DatabaseBootstrap.ApplyAsync(_fixture.ConnectionString);
+
+        var after = await GetPremadeNamesAsync();
+
+        Assert.Equal(before.Count, after.Count);
+        Assert.Equal(after.Count, after.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(before.OrderBy(name => name), after.OrderBy(name => name));
     }
 
     [Fact]
@@ -143,5 +257,16 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.True(sw.ElapsedMilliseconds < 1000, $"Elapsed {sw.ElapsedMilliseconds}ms");
+    }
+
+    private async Task<List<string>> GetPremadeNamesAsync()
+    {
+        using var doc = JsonDocument.Parse(await (await _client.GetAsync("/premades")).Content.ReadAsStringAsync());
+        return doc.RootElement
+            .EnumerateArray()
+            .Select(premade => premade.GetProperty("name").GetString())
+            .OfType<string>()
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
     }
 }
