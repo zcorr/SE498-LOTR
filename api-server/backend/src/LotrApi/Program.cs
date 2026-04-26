@@ -88,6 +88,27 @@ var jsonOptions = new JsonSerializerOptions
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 };
 
+static async Task<StatRecord?> GetStatByNameAsync(string name, NpgsqlDataSource ds, CancellationToken cancellationToken = default)
+{
+    await using var conn = await ds.OpenConnectionAsync(cancellationToken);
+    await using var cmd = new NpgsqlCommand(
+        """
+        SELECT id, name, base_value
+        FROM stats
+        WHERE lower(name) = lower($1)
+        """,
+        conn);
+    cmd.Parameters.AddWithValue(name);
+    await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+    if (!await reader.ReadAsync(cancellationToken))
+        return null;
+
+    return new StatRecord(
+        reader.GetInt32(0),
+        reader.GetString(1),
+        reader.GetInt32(2));
+}
+
 // Server health (SCRUM-11 / SPEC).
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
     .WithTags("Health")
@@ -142,22 +163,32 @@ app.MapGet("/stats", async (NpgsqlDataSource ds) =>
     .WithTags("Game data")
     .WithSummary("All stat definitions (base values).");
 
+app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, CancellationToken cancellationToken) =>
+{
+    var stat = await GetStatByNameAsync(name, ds, cancellationToken);
+    if (stat is null)
+        return Results.NotFound();
+
+    return Results.Json(
+        new
+        {
+            stat.Id,
+            stat.Name,
+            baseValue = stat.BaseValue,
+        },
+        jsonOptions);
+})
+    .WithTags("Game data")
+    .WithSummary("Preferred single-stat lookup by name (case-insensitive).");
+
 app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
 {
-    await using var conn = await ds.OpenConnectionAsync();
-    await using var cmd = new NpgsqlCommand(
-        """
-        SELECT name, base_value
-        FROM stats
-        WHERE name = 'charhealth'
-        """,
-        conn);
-    await using var reader = await cmd.ExecuteReaderAsync();
-    if (!await reader.ReadAsync())
+    var stat = await GetStatByNameAsync("charhealth", ds);
+    if (stat is null)
         return Results.Json(new { name = "charhealth", baseValue = 0 }, jsonOptions);
 
     return Results.Json(
-        new { name = reader.GetString(0), baseValue = reader.GetInt32(1) },
+        new { name = stat.Name, baseValue = stat.BaseValue },
         jsonOptions);
 })
     .WithTags("Game data")
@@ -165,20 +196,12 @@ app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
 
 app.MapGet("/strength", async (NpgsqlDataSource ds) =>
 {
-    await using var conn = await ds.OpenConnectionAsync();
-    await using var cmd = new NpgsqlCommand(
-        """
-        SELECT name, base_value
-        FROM stats
-        WHERE name = 'strength'
-        """,
-        conn);
-    await using var reader = await cmd.ExecuteReaderAsync();
-    if (!await reader.ReadAsync())
+    var stat = await GetStatByNameAsync("strength", ds);
+    if (stat is null)
         return Results.Json(new { name = "strength", baseValue = 0 }, jsonOptions);
 
     return Results.Json(
-        new { name = reader.GetString(0), baseValue = reader.GetInt32(1) },
+        new { name = stat.Name, baseValue = stat.BaseValue },
         jsonOptions);
 })
     .WithTags("Game data")
@@ -346,6 +369,8 @@ app.Run();
 
 // Required for WebApplicationFactory<Program> in integration tests.
 public partial class Program;
+
+public sealed record StatRecord(int Id, string Name, int BaseValue);
 
 public sealed record GenerateRequest(
     [property: JsonPropertyName("class_id")] int ClassId,
