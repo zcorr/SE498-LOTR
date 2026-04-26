@@ -15,6 +15,8 @@ public sealed class LotrApiPostgresFixture : IAsyncLifetime
 
     public HttpClient Client { get; private set; } = null!;
 
+    public string ConnectionString { get; private set; } = string.Empty;
+
     public async Task InitializeAsync()
     {
         _container = new PostgreSqlBuilder()
@@ -23,7 +25,7 @@ public sealed class LotrApiPostgresFixture : IAsyncLifetime
 
         await _container.StartAsync();
 
-        var connectionString = _container.GetConnectionString();
+        ConnectionString = _container.GetConnectionString();
 
         Factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
@@ -32,7 +34,7 @@ public sealed class LotrApiPostgresFixture : IAsyncLifetime
                 config.AddInMemoryCollection(
                     new Dictionary<string, string?>
                     {
-                        ["ConnectionStrings:DefaultConnection"] = connectionString,
+                        ["ConnectionStrings:DefaultConnection"] = ConnectionString,
                     });
             });
         });
