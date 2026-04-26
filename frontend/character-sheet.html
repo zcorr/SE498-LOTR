@@ -857,9 +857,16 @@
       treasure: '50 gp, a broken sword (Narsil heirloom)',
     };
 
-    const sheet = raw ? JSON.parse(raw) : DEV_PREVIEW;
+    const sheet = normalizeSheetData(raw ? JSON.parse(raw) : DEV_PREVIEW);
 
     // ── Helpers ───────────────────────────────────────────────
+    function normalizeSheetData(data) {
+      return {
+        ...data,
+        class: data?.class ?? data?.className,
+        race: data?.race ?? data?.raceName,
+      };
+    }
     function mod(score) {
       const m = Math.floor((score - 10) / 2);
       return (m >= 0 ? '+' : '') + m;
@@ -996,46 +1003,83 @@
       }
     }
 
-    // // ── Populate spell levels ─────────────────────────────────
-    // function buildSpells(spells) {
-    //   const body = document.getElementById('spell-body');
-    //   body.innerHTML = '';
-    //   SPELL_LEVELS.forEach(sl => {
-    //     const spellList = spells?.[sl.level] ?? [];
-    //     let slotsHtml = '';
-    //     if (sl.slots) {
-    //       slotsHtml = `
-    //         <div class="spell-slots">
-    //           <div class="spell-slots-group">
-    //             <div class="spell-slots-label">Slots Total</div>
-    //             <div class="spell-slots-val">—</div>
-    //           </div>
-    //           <div class="spell-slots-group">
-    //             <div class="spell-slots-label">Slots Expended</div>
-    //             <div class="spell-slots-val">—</div>
-    //           </div>
-    //         </div>`;
-    //     }
-    //     let linesHtml = '';
-    //     for (let i = 0; i < sl.count; i++) {
-    //       const name = spellList[i] ?? '';
-    //       linesHtml += `
-    //         <div class="spell-line">
-    //           ${sl.slots ? '<div class="spell-dot"></div>' : ''}
-    //           <div class="spell-name">${name}</div>
-    //         </div>`;
-    //     }
-    //     body.innerHTML += `
-    //       <div class="spell-level-block">
-    //         <div class="spell-level-header">
-    //           <div class="spell-level-num">${sl.level}</div>
-    //           ${sl.label ? `<span style="font-size:0.78rem; color:var(--lotr-muted); font-weight:bold;">${sl.label}</span>` : ''}
-    //           ${slotsHtml}
-    //         </div>
-    //         ${linesHtml}
-    //       </div>`;
-    //   });
-    // }
+    // ── Populate spell levels ─────────────────────────────────
+    function buildSpells(spells) {
+      const body = document.getElementById('spell-body');
+      body.innerHTML = '';
+      SPELL_LEVELS.forEach(sl => {
+        const spellList = spells?.[sl.level] ?? [];
+        let slotsHtml = '';
+        if (sl.slots) {
+          slotsHtml = `
+            <div class="spell-slots">
+              <div class="spell-slots-group">
+                <div class="spell-slots-label">Slots Total</div>
+                <div class="spell-slots-val">—</div>
+              </div>
+              <div class="spell-slots-group">
+                <div class="spell-slots-label">Slots Expended</div>
+                <div class="spell-slots-val">—</div>
+              </div>
+            </div>`;
+        }
+
+        let linesHtml = '';
+        for (let i = 0; i < sl.count; i++) {
+          const name = spellList[i] ?? '';
+          linesHtml += `
+            <div class="spell-line">
+              ${sl.slots ? '<div class="spell-dot"></div>' : ''}
+              <div class="spell-name">${name}</div>
+            </div>`;
+        }
+
+        body.innerHTML += `
+          <div class="spell-level-block">
+            <div class="spell-level-header">
+              <div class="spell-level-num">${sl.level}</div>
+              ${sl.label ? `<span style="font-size:0.78rem; color:var(--lotr-muted); font-weight:bold;">${sl.label}</span>` : ''}
+              ${slotsHtml}
+            </div>
+            ${linesHtml}
+          </div>`;
+      });
+    }
+
+    function renderClassAbilities(sheetData, abilities) {
+      if (!Array.isArray(abilities) || abilities.length === 0) {
+        return;
+      }
+
+      const abilitySummary = abilities
+        .map(ability => ability.desc ? `${ability.name}: ${ability.desc}` : ability.name)
+        .join(' | ');
+
+      const featureText = [sheetData.featuresTraits, abilitySummary].filter(Boolean).join(' | ');
+      const backgroundFeatureText = [sheetData.additionalFeatures, abilitySummary].filter(Boolean).join(' | ');
+
+      set('features-traits', featureText || '—');
+      set('bg-features', backgroundFeatureText || featureText || '—');
+    }
+
+    async function loadClassAbilities(sheetData) {
+      const classId = Number(sheetData?.classId);
+      if (!Number.isInteger(classId) || classId < 0) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/character/abilities?class_id=${classId}`);
+        if (!response.ok) {
+          return;
+        }
+
+        const abilities = await response.json();
+        renderClassAbilities(sheetData, abilities);
+      } catch (err) {
+        console.warn('Could not load class abilities for sheet:', err);
+      }
+    }
 
     // ── Main populate function ────────────────────────────────
     function populateSheet(s) {
@@ -1111,6 +1155,7 @@
     }
 
     populateSheet(sheet);
+    loadClassAbilities(sheet);
 
     // ── Tab switching ─────────────────────────────────────────
     document.querySelectorAll('.sheet-tab').forEach(tab => {
