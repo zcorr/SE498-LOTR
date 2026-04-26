@@ -85,13 +85,16 @@ public class ApiProxyController : ControllerBase
     }
 
     [HttpGet("abilities")]
-    public async Task<IActionResult> GetAbilities()
+    public async Task<IActionResult> GetAbilities([FromQuery(Name = "class_id")] int? classId)
     {
         var token = Request.Cookies["AuthToken"];
         if (string.IsNullOrWhiteSpace(token))
             return Unauthorized("No authentication token found");
 
-        var abilities = await _apiClient.GetAbilitiesAsync(token);
+        if (classId < 0)
+            return BadRequest("class_id must be a non-negative integer");
+
+        var abilities = await _apiClient.GetAbilitiesAsync(token, classId);
         if (abilities == null)
             return StatusCode(500, "Failed to fetch abilities");
 

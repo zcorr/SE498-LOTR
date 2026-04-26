@@ -34,6 +34,7 @@ using LotrApi;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.OpenApi;
 using Npgsql;
+using NpgsqlTypes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -207,33 +208,28 @@ app.MapGet("/strength", async (NpgsqlDataSource ds) =>
     .WithTags("Game data")
     .WithSummary("Strength stat row.");
 
-app.MapGet("/abilities", async (NpgsqlDataSource ds) =>
+app.MapGet("/abilities", async (string? class_id, NpgsqlDataSource ds) =>
 {
-    await using var conn = await ds.OpenConnectionAsync();
-    await using var cmd = new NpgsqlCommand(
-        """
-        SELECT id, name, description, class_id
-        FROM abilities
-        ORDER BY id
-        """,
-        conn);
-    await using var reader = await cmd.ExecuteReaderAsync();
-    var list = new List<object>();
-    while (await reader.ReadAsync())
-    {
-        list.Add(new
-        {
-            id = reader.GetInt32(0),
-            name = reader.GetString(1),
-            desc = reader.IsDBNull(2) ? "" : reader.GetString(2),
-            class_id = reader.GetInt32(3),
-        });
-    }
+    if (class_id is null)
+        return await Program.GetAbilitiesResultAsync(ds, jsonOptions, null);
 
-    return Results.Json(list, jsonOptions);
+    if (!int.TryParse(class_id, out var parsedClassId) || parsedClassId < 0)
+        return Results.BadRequest(new { error = "class_id must be a non-negative integer." });
+
+    return await Program.GetAbilitiesResultAsync(ds, jsonOptions, parsedClassId);
 })
     .WithTags("Game data")
-    .WithSummary("Abilities (id, name, desc, class_id).");
+    .WithSummary("Abilities (id, name, desc, class_id), optionally filtered by class_id.");
+
+app.MapGet("/class/{id:int}/abilities", async (int id, NpgsqlDataSource ds) =>
+{
+    if (id < 0)
+        return Results.BadRequest(new { error = "id must be a non-negative integer." });
+
+    return await Program.GetAbilitiesResultAsync(ds, jsonOptions, id);
+})
+    .WithTags("Game data")
+    .WithSummary("Abilities for a specific class id.");
 
 app.MapGet("/race", async (NpgsqlDataSource ds) =>
 {
@@ -369,6 +365,44 @@ app.Run();
 
 // Required for WebApplicationFactory<Program> in integration tests.
 public partial class Program;
+
+public partial class Program
+{
+    internal static async Task<IResult> GetAbilitiesResultAsync(
+        NpgsqlDataSource ds,
+        JsonSerializerOptions jsonOptions,
+        int? classId)
+    {
+        await using var conn = await ds.OpenConnectionAsync();
+        await using var cmd = new NpgsqlCommand(
+            """
+            SELECT id, name, description, class_id
+            FROM abilities
+            WHERE (@class_id IS NULL OR class_id = @class_id)
+            ORDER BY id
+            """,
+            conn);
+        cmd.Parameters.Add(new NpgsqlParameter<int?>("class_id", NpgsqlDbType.Integer)
+        {
+            TypedValue = classId,
+        });
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            list.Add(new
+            {
+                id = reader.GetInt32(0),
+                name = reader.GetString(1),
+                desc = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                class_id = reader.GetInt32(3),
+            });
+        }
+
+        return Results.Json(list, jsonOptions);
+    }
+}
 
 public sealed record GenerateRequest(
     [property: JsonPropertyName("class_id")] int ClassId,

@@ -118,6 +118,67 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
     }
 
     [Fact]
+    public async Task GetAbilities_WithClassIdQuery_ReturnsOnlyMatchingAbilities()
+    {
+        var response = await _client.GetAsync("/abilities?class_id=1");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(JsonValueKind.Array, root.ValueKind);
+        Assert.Equal(2, root.GetArrayLength());
+        Assert.All(root.EnumerateArray(), ability =>
+        {
+            Assert.Equal(1, ability.GetProperty("class_id").GetInt32());
+        });
+    }
+
+    [Fact]
+    public async Task GetAbilities_WithUnknownClassId_ReturnsEmptyArray()
+    {
+        var response = await _client.GetAsync("/abilities?class_id=999");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(0, doc.RootElement.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task GetAbilities_WithoutClassId_ReturnsFullList_ForBackwardCompatibility()
+    {
+        var response = await _client.GetAsync("/abilities");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(8, doc.RootElement.GetArrayLength());
+    }
+
+    [Theory]
+    [InlineData("/abilities?class_id=-1")]
+    [InlineData("/abilities?class_id=not-a-number")]
+    public async Task GetAbilities_WithInvalidClassId_Returns400(string route)
+    {
+        var response = await _client.GetAsync(route);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetClassAbilitiesRoute_ReturnsSameScopedList()
+    {
+        var response = await _client.GetAsync("/class/2/abilities");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(2, root.GetArrayLength());
+        Assert.All(root.EnumerateArray(), ability =>
+        {
+            Assert.Equal(2, ability.GetProperty("class_id").GetInt32());
+        });
+    }
+
+    [Fact]
     public async Task GetRace_Returns200_AndJsonArray()
     {
         var response = await _client.GetAsync("/race");
