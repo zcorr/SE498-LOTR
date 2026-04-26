@@ -139,6 +139,7 @@ static void AddPremadeFilterParameters(NpgsqlCommand command, int? classId, int?
         query is null ? DBNull.Value : query;
 }
 
+
 static async Task<StatRecord?> GetStatByNameAsync(string name, NpgsqlDataSource ds, CancellationToken cancellationToken = default)
 {
     await using var conn = await ds.OpenConnectionAsync(cancellationToken);
@@ -234,6 +235,24 @@ app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, Cancellatio
     .WithTags("Game data")
     .WithSummary("Get a single stat definition by name (case-insensitive).")
 	.RequireAuthorization();
+
+app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, CancellationToken cancellationToken) =>
+{
+    var stat = await GetStatByNameAsync(name, ds, cancellationToken);
+    if (stat is null)
+        return Results.NotFound();
+
+    return Results.Json(
+        new
+        {
+            stat.Id,
+            stat.Name,
+            baseValue = stat.BaseValue,
+        },
+        jsonOptions);
+})
+    .WithTags("Game data")
+    .WithSummary("Preferred single-stat lookup by name (case-insensitive).");
 
 app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
 {
@@ -584,4 +603,4 @@ public sealed record GenerateRequest(
     [property: JsonPropertyName("class_id")] int ClassId,
     [property: JsonPropertyName("race_id")] int RaceId);
 
-file sealed record StatRecord(int Id, string Name, int BaseValue);
+public sealed record StatRecord(int Id, string Name, int BaseValue);
