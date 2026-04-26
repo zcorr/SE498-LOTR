@@ -92,12 +92,13 @@ public class LotrApiClient : ILotrApiClient
         return new List<RaceDTO>();
     }
 
-    public async Task<List<AbilityDTO>> GetAbilitiesAsync(string bearerToken)
+    public async Task<List<AbilityDTO>> GetAbilitiesAsync(string bearerToken, int? classId = null)
     {
         AddAuthHeader(bearerToken);
         try
         {
-            var response = await _httpClient.GetAsync("/abilities");
+            var route = classId.HasValue ? $"/abilities?class_id={classId.Value}" : "/abilities";
+            var response = await _httpClient.GetAsync(route);
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
