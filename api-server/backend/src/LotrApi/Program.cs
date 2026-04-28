@@ -599,6 +599,13 @@ public partial class Program
     }
 }
 
+public sealed record PremadeQuery(
+    [property: JsonPropertyName("class_id")] int? ClassId,
+    [property: JsonPropertyName("race_id")] int? RaceId,
+    [property: JsonPropertyName("q")] string? Query,
+    [property: JsonPropertyName("limit")] int? Limit,
+    [property: JsonPropertyName("offset")] int? Offset);
+
 public sealed record GenerateRequest(
     [property: JsonPropertyName("class_id")] int ClassId,
     [property: JsonPropertyName("race_id")] int RaceId);
