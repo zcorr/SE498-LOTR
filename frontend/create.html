@@ -267,7 +267,7 @@
 
     // ── Config ────────────────────────────────────────────────
     // TODO: update base URL once Web Server is running
-    const API_BASE = 'http://localhost:5000';
+    const API_BASE = 'http://localhost:5292/api';
 
     const alertBox   = document.getElementById('alert-box');
     const submitBtn  = document.getElementById('submit-btn');
@@ -281,13 +281,7 @@
       btnSpinner.classList.toggle('d-none', !v);
       btnLabel.textContent = v ? 'Generating…' : 'Create Character';
     }
-
-    function authHeaders() {
-      return {
-        'Authorization': `Bearer ${sessionStorage.getItem('bearerToken')}`,
-        'Content-Type': 'application/json',
-      };
-    }
+    
 
     // ── Populate dropdowns from API ───────────────────────────
     async function loadDropdowns() {
@@ -341,11 +335,9 @@
       setLoading(true);
 
       try {
-        // TODO: POST /generate — endpoint not yet implemented
-        // Expected request body & response shape TBD with API team
-        const response = await fetch(`${API_BASE}/generate`, {
+        const response = await fetch(`${API_BASE}/character/generate`, {
           method: 'POST',
-          headers: authHeaders(),
+          headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ name: charName, classId, raceId }),
         });
 
@@ -355,7 +347,6 @@
           sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
           window.location.href = 'character-sheet.html';
         } else if (response.status === 401) {
-          sessionStorage.removeItem('bearerToken');
           window.location.href = 'login.html';
         } else {
           showAlert(`Error generating character (${response.status}). Please try again.`);
@@ -371,7 +362,6 @@
     // ── Logout ────────────────────────────────────────────────
     document.getElementById('logout-link').addEventListener('click', (e) => {
       e.preventDefault();
-      sessionStorage.removeItem('bearerToken');
       window.location.href = 'login.html';
     });
   </script>

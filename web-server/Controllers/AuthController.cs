@@ -22,7 +22,7 @@ public class AuthController : Controller
         var token = Request.Cookies["AuthToken"];
         if (!string.IsNullOrWhiteSpace(token) && _authService.ValidateToken(token))
         {
-            return Redirect("/Premade");
+            return Redirect("/premade");
         }
 
         try

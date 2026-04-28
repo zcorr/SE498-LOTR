@@ -6,6 +6,7 @@ using System.IO;
 namespace web_server.Controllers;
 
 [Authorize] // Require authentication for all character operations
+[Route("character")]
 public class CharacterController : Controller
 {
     private readonly ILotrApiClient _apiClient;
@@ -15,7 +16,8 @@ public class CharacterController : Controller
         _apiClient = apiClient;
     }
 
-    // GET: /Character/Create - Serve the character creation page
+    // GET: /character/create - Serve the character creation page
+    [HttpGet("create")]
     public IActionResult Create()
     {
         return PhysicalFile(
@@ -24,7 +26,8 @@ public class CharacterController : Controller
         );
     }
 
-    // GET: /Character/Sheet - Serve the character sheet display page
+    // GET: /character/sheet - Serve the character sheet display page
+    [HttpGet("sheet")]
     public IActionResult Sheet()
     {
         return PhysicalFile(

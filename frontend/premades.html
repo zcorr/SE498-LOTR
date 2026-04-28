@@ -264,11 +264,7 @@
 
     // ── Config ────────────────────────────────────────────────
     // TODO: update base URL once Web Server / API Server is running
-    const API_BASE = 'http://localhost:5000';
-
-    function authHeaders() {
-      return { 'Authorization': `Bearer ${sessionStorage.getItem('bearerToken')}` };
-    }
+    const API_BASE = 'http://localhost:5292/api';
 
     // ── State ─────────────────────────────────────────────────
     let allCharacters = [];
@@ -279,7 +275,7 @@
       try {
         // TODO: GET /premades — endpoint not yet implemented
         // Using placeholder data until API is ready
-        const response = await fetch(`${API_BASE}/premades`, { headers: authHeaders() });
+        const response = await fetch(`${API_BASE}/premade/list`, { headers: {'Content-Type': 'application/json'} });
         if (response.ok) {
           allCharacters = await response.json();
         } else {
@@ -378,7 +374,6 @@
     // ── Logout ────────────────────────────────────────────────
     document.getElementById('logout-link').addEventListener('click', (e) => {
       e.preventDefault();
-      sessionStorage.removeItem('bearerToken');
       window.location.href = 'login.html';
     });
 

@@ -252,7 +252,8 @@
     //  Expected: POST /login (or /api/login) with Basic Auth header.
     //  Expected success response: { "token": "<bearer_token>" }
     // ─────────────────────────────────────────────────────────
-    const WEB_SERVER_LOGIN_URL = 'http://localhost:5000/login'; // ← update this
+    const WEB_SERVER_LOGIN_URL = 'http://localhost:5292/api/auth/login';
+    const WEB_SERVER = 'http://localhost:5292';
 
     // ─────────────────────────────────────────────────────────
     //  UI helpers
@@ -297,41 +298,26 @@
       setLoading(true);
 
       try {
-        // Build Basic Auth header: "Basic base64(username:password)"
-        const credentials = btoa(`${username}:${password}`);
-
-        const response = await fetch(WEB_SERVER_LOGIN_URL, {
+        const response = await fetch(WEB_SERVER, {
           method: 'POST',
           headers: {
-            'Authorization': `Basic ${credentials}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ username, password })
         });
 
+        const result = await response.json();
+
         if (response.ok) {
-          const data = await response.json();
-
-          // Store the Bearer Token for use on subsequent requests
-          // TODO: confirm the token field name with the Web Server team
-          const token = data.token;
-          if (!token) {
-            showAlert('Login succeeded but no token was returned. Contact your team.');
-            return;
-          }
-
-          sessionStorage.setItem('bearerToken', token);
-
+          // Login successful - redirect to premades
           showAlert('Login successful! Redirecting…', 'success');
-
-          // TODO: update redirect target once the main app page exists
           setTimeout(() => {
-            window.location.href = 'premades.html';
+            window.location.href = '/premades';
           }, 800);
-
         } else if (response.status === 401) {
           showAlert('Invalid username or password. Please try again.');
         } else {
-          showAlert(`Unexpected error (${response.status}). Please try again later.`);
+          showAlert(result.message || `Unexpected error (${response.status}). Please try again later.`);
         }
 
       } catch (err) {
@@ -342,13 +328,7 @@
         setLoading(false);
       }
     });
-
-    // ─────────────────────────────────────────────────────────
-    //  If already logged in, skip to main page
-    // ─────────────────────────────────────────────────────────
-    if (sessionStorage.getItem('bearerToken')) {
-      window.location.href = 'premades.html';
-    }
+    
   </script>
 </body>
 </html>

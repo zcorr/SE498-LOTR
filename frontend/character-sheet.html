@@ -821,12 +821,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
   <script>
-    // ── Auth guard ────────────────────────────────────────────
-    // TODO: re-enable before going live
-    // if (!sessionStorage.getItem('bearerToken')) {
-    //   window.location.href = 'login.html';
-    // }
-
     // ── Load sheet data ───────────────────────────────────────
     // Data is expected from sessionStorage, set by create.html or premades.html
     // TODO: shape here mirrors what POST /generate and GET /premades will return
@@ -1170,7 +1164,6 @@
     // ── Logout ────────────────────────────────────────────────
     document.getElementById('logout-link').addEventListener('click', (e) => {
       e.preventDefault();
-      sessionStorage.removeItem('bearerToken');
       window.location.href = 'login.html';
     });
   </script>
