@@ -996,46 +996,46 @@
       }
     }
 
-    // // ── Populate spell levels ─────────────────────────────────
-    // function buildSpells(spells) {
-    //   const body = document.getElementById('spell-body');
-    //   body.innerHTML = '';
-    //   SPELL_LEVELS.forEach(sl => {
-    //     const spellList = spells?.[sl.level] ?? [];
-    //     let slotsHtml = '';
-    //     if (sl.slots) {
-    //       slotsHtml = `
-    //         <div class="spell-slots">
-    //           <div class="spell-slots-group">
-    //             <div class="spell-slots-label">Slots Total</div>
-    //             <div class="spell-slots-val">—</div>
-    //           </div>
-    //           <div class="spell-slots-group">
-    //             <div class="spell-slots-label">Slots Expended</div>
-    //             <div class="spell-slots-val">—</div>
-    //           </div>
-    //         </div>`;
-    //     }
-    //     let linesHtml = '';
-    //     for (let i = 0; i < sl.count; i++) {
-    //       const name = spellList[i] ?? '';
-    //       linesHtml += `
-    //         <div class="spell-line">
-    //           ${sl.slots ? '<div class="spell-dot"></div>' : ''}
-    //           <div class="spell-name">${name}</div>
-    //         </div>`;
-    //     }
-    //     body.innerHTML += `
-    //       <div class="spell-level-block">
-    //         <div class="spell-level-header">
-    //           <div class="spell-level-num">${sl.level}</div>
-    //           ${sl.label ? `<span style="font-size:0.78rem; color:var(--lotr-muted); font-weight:bold;">${sl.label}</span>` : ''}
-    //           ${slotsHtml}
-    //         </div>
-    //         ${linesHtml}
-    //       </div>`;
-    //   });
-    // }
+    // ── Populate spell levels ─────────────────────────────────
+    function buildSpells(spells) {
+      const body = document.getElementById('spell-body');
+      body.innerHTML = '';
+      SPELL_LEVELS.forEach(sl => {
+        const spellList = spells?.[sl.level] ?? [];
+        let slotsHtml = '';
+        if (sl.slots) {
+          slotsHtml = `
+            <div class="spell-slots">
+              <div class="spell-slots-group">
+                <div class="spell-slots-label">Slots Total</div>
+                <div class="spell-slots-val">—</div>
+              </div>
+              <div class="spell-slots-group">
+                <div class="spell-slots-label">Slots Expended</div>
+                <div class="spell-slots-val">—</div>
+              </div>
+            </div>`;
+        }
+        let linesHtml = '';
+        for (let i = 0; i < sl.count; i++) {
+          const name = spellList[i] ?? '';
+          linesHtml += `
+            <div class="spell-line">
+              ${sl.slots ? '<div class="spell-dot"></div>' : ''}
+              <div class="spell-name">${name}</div>
+            </div>`;
+        }
+        body.innerHTML += `
+          <div class="spell-level-block">
+            <div class="spell-level-header">
+              <div class="spell-level-num">${sl.level}</div>
+              ${sl.label ? `<span style="font-size:0.78rem; color:var(--lotr-muted); font-weight:bold;">${sl.label}</span>` : ''}
+              ${slotsHtml}
+            </div>
+            ${linesHtml}
+          </div>`;
+      });
+    }
 
     // ── Main populate function ────────────────────────────────
     function populateSheet(s) {

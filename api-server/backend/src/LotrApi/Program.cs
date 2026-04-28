@@ -34,6 +34,7 @@ using LotrApi;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.OpenApi;
 using Npgsql;
+using NpgsqlTypes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +88,28 @@ var jsonOptions = new JsonSerializerOptions
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 };
+
+static string? NormalizeSearch(string? query) =>
+    string.IsNullOrWhiteSpace(query) ? null : query.Trim();
+
+static bool TryResolvePremadePaging(int? requestedLimit, int? requestedOffset, out int limit, out int offset)
+{
+    limit = requestedLimit ?? 20;
+    offset = requestedOffset ?? 0;
+
+    return limit is >= 1 and <= 100
+        && offset >= 0;
+}
+
+static void AddPremadeFilterParameters(NpgsqlCommand command, int? classId, int? raceId, string? query)
+{
+    command.Parameters.Add("@class_id", NpgsqlDbType.Integer).Value =
+        classId.HasValue ? classId.Value : DBNull.Value;
+    command.Parameters.Add("@race_id", NpgsqlDbType.Integer).Value =
+        raceId.HasValue ? raceId.Value : DBNull.Value;
+    command.Parameters.Add("@q", NpgsqlDbType.Text).Value =
+        query is null ? DBNull.Value : query;
+}
 
 static async Task<StatRecord?> GetStatByNameAsync(string name, NpgsqlDataSource ds, CancellationToken cancellationToken = default)
 {
@@ -258,21 +281,48 @@ app.MapGet("/race", async (NpgsqlDataSource ds) =>
     .WithTags("Game data")
     .WithSummary("All races.");
 
-app.MapGet("/premades", async (NpgsqlDataSource ds) =>
+app.MapGet("/premades", async (NpgsqlDataSource ds, int? class_id, int? race_id, string? q, int? limit, int? offset) =>
 {
+    if (!TryResolvePremadePaging(limit, offset, out var resolvedLimit, out var resolvedOffset))
+        return Results.BadRequest("limit must be between 1 and 100, and offset must be 0 or greater.");
+
+    var search = NormalizeSearch(q);
+
     await using var conn = await ds.OpenConnectionAsync();
-    await using var cmd = new NpgsqlCommand(
+    await using var countCmd = new NpgsqlCommand(
         """
-        SELECT id, name, class_id, race_id, stats::text
-        FROM premades
-        ORDER BY id
+        SELECT COUNT(*)
+        FROM premades p
+        WHERE (@class_id IS NULL OR p.class_id = @class_id)
+          AND (@race_id IS NULL OR p.race_id = @race_id)
+          AND (@q IS NULL OR p.name ILIKE '%' || @q || '%')
         """,
         conn);
+    AddPremadeFilterParameters(countCmd, class_id, race_id, search);
+    var total = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+    await using var cmd = new NpgsqlCommand(
+        """
+        SELECT p.id, p.name, p.class_id, p.race_id, c.name, r.name, p.stats::text
+        FROM premades p
+        INNER JOIN classes c ON c.id = p.class_id
+        INNER JOIN races r ON r.id = p.race_id
+        WHERE (@class_id IS NULL OR p.class_id = @class_id)
+          AND (@race_id IS NULL OR p.race_id = @race_id)
+          AND (@q IS NULL OR p.name ILIKE '%' || @q || '%')
+        ORDER BY p.id
+        LIMIT @limit
+        OFFSET @offset
+        """,
+        conn);
+    AddPremadeFilterParameters(cmd, class_id, race_id, search);
+    cmd.Parameters.Add("@limit", NpgsqlDbType.Integer).Value = resolvedLimit;
+    cmd.Parameters.Add("@offset", NpgsqlDbType.Integer).Value = resolvedOffset;
     await using var reader = await cmd.ExecuteReaderAsync();
     var list = new List<object>();
     while (await reader.ReadAsync())
     {
-        var statsText = reader.GetString(4);
+        var statsText = reader.GetString(6);
         var stats = JsonSerializer.Deserialize<JsonElement>(statsText);
         list.Add(new
         {
@@ -280,21 +330,39 @@ app.MapGet("/premades", async (NpgsqlDataSource ds) =>
             name = reader.GetString(1),
             class_id = reader.GetInt32(2),
             race_id = reader.GetInt32(3),
+            @class = reader.GetString(4),
+            race = reader.GetString(5),
             stats,
         });
     }
 
-    return Results.Json(list, jsonOptions);
+    return Results.Json(new
+    {
+        items = list,
+        total,
+        limit = resolvedLimit,
+        offset = resolvedOffset,
+    }, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Premade characters (class_id, race_id, stats JSON).");
+    .WithSummary("Premade characters with optional filters and pagination.");
 
-app.MapGet("/names", async (NpgsqlDataSource ds) =>
+app.MapGet("/names", async (NpgsqlDataSource ds, int? class_id, int? race_id, string? q) =>
 {
+    var search = NormalizeSearch(q);
+
     await using var conn = await ds.OpenConnectionAsync();
     await using var cmd = new NpgsqlCommand(
-        "SELECT name FROM premades ORDER BY name",
+        """
+        SELECT p.name
+        FROM premades p
+        WHERE (@class_id IS NULL OR p.class_id = @class_id)
+          AND (@race_id IS NULL OR p.race_id = @race_id)
+          AND (@q IS NULL OR p.name ILIKE '%' || @q || '%')
+        ORDER BY p.name
+        """,
         conn);
+    AddPremadeFilterParameters(cmd, class_id, race_id, search);
     await using var reader = await cmd.ExecuteReaderAsync();
     var names = new List<string>();
     while (await reader.ReadAsync())
@@ -371,6 +439,13 @@ app.Run();
 public partial class Program;
 
 public sealed record StatRecord(int Id, string Name, int BaseValue);
+
+public sealed record PremadeQuery(
+    [property: JsonPropertyName("class_id")] int? ClassId,
+    [property: JsonPropertyName("race_id")] int? RaceId,
+    [property: JsonPropertyName("q")] string? Query,
+    [property: JsonPropertyName("limit")] int? Limit,
+    [property: JsonPropertyName("offset")] int? Offset);
 
 public sealed record GenerateRequest(
     [property: JsonPropertyName("class_id")] int ClassId,

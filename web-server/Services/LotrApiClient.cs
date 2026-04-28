@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace web_server.Services;
 
@@ -18,6 +19,32 @@ public class LotrApiClient : ILotrApiClient
             _httpClient.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", bearerToken);
         }
+    }
+
+    private static string BuildPremadeQueryString(
+        string path,
+        int? classId = null,
+        int? raceId = null,
+        string? query = null,
+        int? limit = null,
+        int? offset = null)
+    {
+        var parameters = new Dictionary<string, string?>();
+
+        if (classId.HasValue)
+            parameters["class_id"] = classId.Value.ToString();
+        if (raceId.HasValue)
+            parameters["race_id"] = raceId.Value.ToString();
+        if (!string.IsNullOrWhiteSpace(query))
+            parameters["q"] = query.Trim();
+        if (limit.HasValue)
+            parameters["limit"] = limit.Value.ToString();
+        if (offset.HasValue)
+            parameters["offset"] = offset.Value.ToString();
+
+        return parameters.Count == 0
+            ? path
+            : QueryHelpers.AddQueryString(path, parameters!);
     }
 
     public async Task<bool> IsHealthyAsync()
@@ -112,24 +139,30 @@ public class LotrApiClient : ILotrApiClient
         return new List<AbilityDTO>();
     }
 
-    public async Task<List<PremadeDTO>> GetPremadesAsync(string bearerToken)
+    public async Task<PremadeListResponseDTO?> GetPremadesAsync(
+        string bearerToken,
+        int? classId = null,
+        int? raceId = null,
+        string? query = null,
+        int? limit = null,
+        int? offset = null)
     {
         AddAuthHeader(bearerToken);
         try
         {
-            var response = await _httpClient.GetAsync("/premades");
+            var response = await _httpClient.GetAsync(
+                BuildPremadeQueryString("/premades", classId, raceId, query, limit, offset));
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<List<PremadeDTO>>(json, new JsonSerializerOptions
+                return JsonSerializer.Deserialize<PremadeListResponseDTO>(json, new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 });
-                return result ?? new List<PremadeDTO>();
             }
         }
         catch { }
-        return new List<PremadeDTO>();
+        return null;
     }
 
     public async Task<GeneratedCharacterSheetDTO?> GenerateCharacterAsync(int classId, int raceId, string bearerToken)
@@ -187,15 +220,24 @@ public class LotrApiClient : ILotrApiClient
         return null;
     }
 
-    public async Task<string?> GetNamesAsync(string bearerToken)
+    public async Task<List<string>?> GetNamesAsync(
+        string bearerToken,
+        int? classId = null,
+        int? raceId = null,
+        string? query = null)
     {
         AddAuthHeader(bearerToken);
         try
         {
-            var response = await _httpClient.GetAsync("/names");
+            var response = await _httpClient.GetAsync(
+                BuildPremadeQueryString("/names", classId, raceId, query));
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<string>>(json, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
             }
         }
         catch { }

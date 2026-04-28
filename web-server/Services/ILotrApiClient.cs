@@ -9,9 +9,19 @@ public interface ILotrApiClient
     Task<List<StatDTO>> GetStatsAsync(string bearerToken);
     Task<List<RaceDTO>> GetRacesAsync(string bearerToken);
     Task<List<AbilityDTO>> GetAbilitiesAsync(string bearerToken);
-    Task<List<PremadeDTO>> GetPremadesAsync(string bearerToken);
+    Task<PremadeListResponseDTO?> GetPremadesAsync(
+        string bearerToken,
+        int? classId = null,
+        int? raceId = null,
+        string? query = null,
+        int? limit = null,
+        int? offset = null);
     Task<GeneratedCharacterSheetDTO?> GenerateCharacterAsync(int classId, int raceId, string bearerToken);
     Task<string?> GetCharacterHealthAsync(string bearerToken);
     Task<string?> GetStrengthAsync(string bearerToken);
-    Task<string?> GetNamesAsync(string bearerToken);
+    Task<List<string>?> GetNamesAsync(
+        string bearerToken,
+        int? classId = null,
+        int? raceId = null,
+        string? query = null);
 }

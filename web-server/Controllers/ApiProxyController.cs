@@ -113,13 +113,18 @@ public class ApiProxyController : ControllerBase
     }
 
     [HttpGet("premades")]
-    public async Task<IActionResult> GetPremades()
+    public async Task<IActionResult> GetPremades(
+        [FromQuery(Name = "class_id")] int? classId,
+        [FromQuery(Name = "race_id")] int? raceId,
+        [FromQuery(Name = "q")] string? query,
+        [FromQuery] int? limit,
+        [FromQuery] int? offset)
     {
         var token = Request.Cookies["AuthToken"];
         if (string.IsNullOrWhiteSpace(token))
             return Unauthorized("No authentication token found");
 
-        var premades = await _apiClient.GetPremadesAsync(token);
+        var premades = await _apiClient.GetPremadesAsync(token, classId, raceId, query, limit, offset);
         if (premades == null)
             return StatusCode(500, "Failed to fetch premades");
 
@@ -127,13 +132,16 @@ public class ApiProxyController : ControllerBase
     }
 
     [HttpGet("names")]
-    public async Task<IActionResult> GetNames()
+    public async Task<IActionResult> GetNames(
+        [FromQuery(Name = "class_id")] int? classId,
+        [FromQuery(Name = "race_id")] int? raceId,
+        [FromQuery(Name = "q")] string? query)
     {
         var token = Request.Cookies["AuthToken"];
         if (string.IsNullOrWhiteSpace(token))
             return Unauthorized("No authentication token found");
 
-        var names = await _apiClient.GetNamesAsync(token);
+        var names = await _apiClient.GetNamesAsync(token, classId, raceId, query);
         if (names == null)
             return StatusCode(500, "Failed to fetch names");
 

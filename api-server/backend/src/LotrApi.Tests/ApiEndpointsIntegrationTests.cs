@@ -125,13 +125,18 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
     }
 
     [Fact]
-    public async Task GetPremades_Returns200_AndJsonArray()
+    public async Task GetPremades_Returns200_AndPaginatedPayload()
     {
         var response = await _client.GetAsync("/premades");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+        var root = doc.RootElement;
+        Assert.Equal(JsonValueKind.Object, root.ValueKind);
+        Assert.Equal(JsonValueKind.Array, root.GetProperty("items").ValueKind);
+        Assert.Equal(3, root.GetProperty("total").GetInt32());
+        Assert.Equal(20, root.GetProperty("limit").GetInt32());
+        Assert.Equal(0, root.GetProperty("offset").GetInt32());
     }
 
     [Fact]
@@ -142,6 +147,86 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+    }
+
+    [Fact]
+    public async Task GetPremades_FiltersByClassId()
+    {
+        var response = await _client.GetAsync("/premades?class_id=3");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(1, root.GetProperty("total").GetInt32());
+
+        foreach (var item in root.GetProperty("items").EnumerateArray())
+        {
+            Assert.Equal(3, item.GetProperty("class_id").GetInt32());
+        }
+    }
+
+    [Fact]
+    public async Task GetPremades_FiltersByRaceId()
+    {
+        var response = await _client.GetAsync("/premades?race_id=1");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(2, root.GetProperty("total").GetInt32());
+
+        foreach (var item in root.GetProperty("items").EnumerateArray())
+        {
+            Assert.Equal(1, item.GetProperty("race_id").GetInt32());
+        }
+    }
+
+    [Fact]
+    public async Task GetPremades_SearchesByNameSubstring_CaseInsensitive()
+    {
+        var response = await _client.GetAsync("/premades?q=GOL");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(1, root.GetProperty("total").GetInt32());
+        var item = Assert.Single(root.GetProperty("items").EnumerateArray());
+        Assert.Equal("Gollum", item.GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task GetPremades_PaginationBeyondTotal_ReturnsEmptyItemsAndOriginalTotal()
+    {
+        var response = await _client.GetAsync("/premades?limit=5&offset=5");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(3, root.GetProperty("total").GetInt32());
+        Assert.Equal(5, root.GetProperty("limit").GetInt32());
+        Assert.Equal(5, root.GetProperty("offset").GetInt32());
+        Assert.Equal(0, root.GetProperty("items").GetArrayLength());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(101)]
+    public async Task GetPremades_InvalidLimit_Returns400(int limit)
+    {
+        var response = await _client.GetAsync($"/premades?limit={limit}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetNames_AppliesTheSameFilters()
+    {
+        var response = await _client.GetAsync("/names?race_id=1&q=go");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var names = Assert.Single(doc.RootElement.EnumerateArray());
+        Assert.Equal("Gollum", names.GetString());
     }
 
     [Fact]

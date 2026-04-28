@@ -45,14 +45,19 @@ public class PremadeApiController : ControllerBase
     }
 
     [HttpGet("list")]
-    public async Task<IActionResult> GetPremades()
+    public async Task<IActionResult> GetPremades(
+        [FromQuery(Name = "class_id")] int? classId,
+        [FromQuery(Name = "race_id")] int? raceId,
+        [FromQuery(Name = "q")] string? query,
+        [FromQuery] int? limit,
+        [FromQuery] int? offset)
     {
         // Get the bearer token from the cookie
         var token = Request.Cookies["AuthToken"];
         if (string.IsNullOrWhiteSpace(token))
             return Unauthorized("No authentication token found");
 
-        var premades = await _apiClient.GetPremadesAsync(token);
+        var premades = await _apiClient.GetPremadesAsync(token, classId, raceId, query, limit, offset);
         if (premades == null)
             return StatusCode(500, "Failed to fetch premade characters");
 
