@@ -284,38 +284,78 @@
 
 
   // ── Populate dropdowns from API ───────────────────────────
+  // allClasses stores the full class data so we can filter races
+  // based on each class's racial_ids when the user picks a class.
+  let allClasses = [];
+  let allRaces = [];
+
   async function loadDropdowns() {
     try {
-      // TODO: GET /class and GET /race — endpoints not yet implemented
-      // Placeholder options until API is ready
+      const [classRes, raceRes] = await Promise.all([
+        fetch(`${API_BASE}/character/classes`),
+        fetch(`${API_BASE}/character/races`),
+      ]);
 
-      const classes = ['Barbarian', 'Cleric', 'Rogue', 'Sorcerer', 'Wizard'];
-      const races   = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Orc'];
+      if (!classRes.ok || !raceRes.ok) {
+        showAlert('Could not load game data. Please refresh.');
+        return;
+      }
+
+      allClasses = await classRes.json();
+      allRaces = await raceRes.json();
 
       const classSelect = document.getElementById('class-select');
-      const raceSelect  = document.getElementById('race-select');
-
-
-      classes.forEach(c => {
+      allClasses.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.toLowerCase();
-        opt.textContent = c;
+        opt.value = c.id;           // integer ID from the database
+        opt.textContent = c.name;
         classSelect.appendChild(opt);
       });
 
-
-      races.forEach(r => {
-        const opt = document.createElement('option');
-        opt.value = r.toLowerCase();
-        opt.textContent = r;
-
-        raceSelect.appendChild(opt);
-      });
+      // Race dropdown starts empty — populated when a class is selected
+      updateRaceDropdown();
 
     } catch (err) {
+      showAlert('Could not reach the server. Please check your connection.');
       console.warn('Could not load dropdown data from API:', err);
     }
   }
+
+  // ── Filter races by selected class ────────────────────────
+  // Each class has a racial_ids array (e.g. Warrior: [1,2,3,4]).
+  // Only races whose id is in that array are valid choices.
+  function updateRaceDropdown() {
+    const classSelect = document.getElementById('class-select');
+    const raceSelect = document.getElementById('race-select');
+
+    // Clear existing race options
+    raceSelect.innerHTML = '<option value="" disabled selected>Race</option>';
+
+    const selectedClassId = parseInt(classSelect.value);
+    if (!selectedClassId) return;
+
+    // Find the selected class to get its racial_ids
+    const selectedClass = allClasses.find(c => c.id === selectedClassId);
+    if (!selectedClass) return;
+
+    // racial_ids might come as racialIds or racial_ids depending on
+    // your DTO serialization — handle both
+    const allowedRaceIds = selectedClass.racialids || [];
+
+    // Only show races that are allowed for this class
+    allRaces
+            .filter(r => allowedRaceIds.includes(r.id))
+            .forEach(r => {
+              const opt = document.createElement('option');
+              opt.value = r.id;
+              opt.textContent = r.name;
+              raceSelect.appendChild(opt);
+            });
+  }
+
+  // When the class changes, update the available races
+  document.getElementById('class-select').addEventListener('change', updateRaceDropdown);
+
   loadDropdowns();
 
   // ── Form submit ───────────────────────────────────────────
@@ -324,8 +364,8 @@
     clearAlert();
 
     const charName = document.getElementById('char-name').value.trim();
-    const classId  = document.getElementById('class-select').value;
-    const raceId = document.getElementById('race-select').value;
+    const classId  = parseInt(document.getElementById('class-select').value);
+    const raceId   = parseInt(document.getElementById('race-select').value);
 
     if (!classId || !raceId) {
       showAlert('Please select both a class and a race.');
@@ -338,13 +378,45 @@
       const response = await fetch(`${API_BASE}/character/generate`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ name: charName, classId, raceId }),
+        body: JSON.stringify({ classId, raceId }),
       });
 
       if (response.ok) {
         const sheet = await response.json();
-        // Pass sheet data to character-sheet page via sessionStorage
-        sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
+
+        // Map full stat names to the 3-letter keys the character sheet expects
+        const statMap = {
+          strength: 'STR',
+          dexterity: 'DEX',
+          constitution: 'CON',
+          intelligence: 'INT',
+          wisdom: 'WIS',
+          charisma: 'CHA',
+        };
+
+        const mappedStats = {};
+        if (sheet.stats) {
+          for (const [key, value] of Object.entries(sheet.stats)) {
+            if (statMap[key]) {
+              mappedStats[statMap[key]] = value;
+            } else {
+              // Keep non-ability stats as-is (e.g. charhealth)
+              mappedStats[key] = value;
+            }
+          }
+        }
+
+        // Build the object the character sheet page expects
+        const sheetData = {
+          name: charName || '—',
+          className: sheet.className,
+          raceName: sheet.raceName,
+          classDescription: sheet.classDescription,
+          raceModifiers: sheet.raceModifiers,
+          stats: mappedStats,
+        };
+
+        sessionStorage.setItem('currentSheet', JSON.stringify(sheetData));
         window.location.href = '/character/sheet';
       } else if (response.status === 401) {
         window.location.href = '/auth/login';
