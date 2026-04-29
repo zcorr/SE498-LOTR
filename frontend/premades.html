@@ -219,166 +219,166 @@
 
 <body>
 
-  <!-- Nav -->
-  <nav class="lotr-nav">
-    <a href="premades.html" class="nav-brand">⚔ Middle-earth Sheets</a>
-    <div class="nav-links">
-      <a href="create.html">Create Character</a>
-      <a href="premades.html" class="active">Premade Characters</a>
-      <a href="#" id="logout-link">Log Out</a>
-    </div>
-  </nav>
+<!-- Nav -->
+<nav class="lotr-nav">
+  <a href="/premade" class="nav-brand">⚔ Middle-earth Sheets</a>
+  <div class="nav-links">
+    <a href="/character/create">Create Character</a>
+    <a href="/premade" class="active">Premade Characters</a>
+    <a href="#" id="logout-link">Log Out</a>
+  </div>
+</nav>
 
-  <main>
-    <h1 class="page-heading">Premade Character Search</h1>
-    <p class="page-heading-sub">Choose a legendary hero of Middle-earth</p>
+<main>
+  <h1 class="page-heading">Premade Character Search</h1>
+  <p class="page-heading-sub">Choose a legendary hero of Middle-earth</p>
 
-    <!-- Search -->
-    <div class="search-wrap">
-      <input type="text" id="search-input" class="search-input" placeholder="🔍  Search characters…" />
-    </div>
+  <!-- Search -->
+  <div class="search-wrap">
+    <input type="text" id="search-input" class="search-input" placeholder="🔍  Search characters…" />
+  </div>
 
-    <!-- Filters -->
-    <div class="filter-bar">
-      <span class="filter-label">Class:</span>
-      <button class="filter-pill active" data-filter-type="class" data-filter-value="">All</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="barbarian">Barbarian</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="cleric">Cleric</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="rogue">Rogue</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="sorcerer">Sorcerer</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="wizard">Wizard</button>
-    </div>
+  <!-- Filters -->
+  <div class="filter-bar">
+    <span class="filter-label">Class:</span>
+    <button class="filter-pill active" data-filter-type="class" data-filter-value="">All</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="barbarian">Barbarian</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="cleric">Cleric</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="rogue">Rogue</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="sorcerer">Sorcerer</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="wizard">Wizard</button>
+  </div>
 
-    <!-- Status / results -->
-    <div id="status-msg">Loading characters…</div>
-    <div class="card-grid" id="card-grid" style="display:none;"></div>
-  </main>
+  <!-- Status / results -->
+  <div id="status-msg">Loading characters…</div>
+  <div class="card-grid" id="card-grid" style="display:none;"></div>
+</main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // ── Auth guard ────────────────────────────────────────────
-    // TODO: re-enable before going live
-    // if (!sessionStorage.getItem('bearerToken')) {
-    //   window.location.href = 'login.html';
-    // }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── Auth guard ────────────────────────────────────────────
+  // TODO: re-enable before going live
+  // if (!sessionStorage.getItem('bearerToken')) {
+  //   window.location.href = '/auth/login';
+  // }
 
-    // ── Config ────────────────────────────────────────────────
-    // TODO: update base URL once Web Server / API Server is running
-    const API_BASE = 'http://localhost:5292/api';
+  // ── Config ────────────────────────────────────────────────
+  // TODO: update base URL once Web Server / API Server is running
+  const API_BASE = 'http://localhost:5292/api';
 
-    // ── State ─────────────────────────────────────────────────
-    let allCharacters = [];
-    let activeClassFilter = '';
+  // ── State ─────────────────────────────────────────────────
+  let allCharacters = [];
+  let activeClassFilter = '';
 
-    // ── Fetch premades ─────────────────────────────────────────
-    async function fetchPremades() {
-      try {
-        // TODO: GET /premades — endpoint not yet implemented
-        // Using placeholder data until API is ready
-        const response = await fetch(`${API_BASE}/premade/list`, { headers: {'Content-Type': 'application/json'} });
-        if (response.ok) {
-          allCharacters = await response.json();
-        } else {
-          throw new Error(`HTTP ${response.status}`);
-        }
-      } catch (err) {
-        console.warn('Could not load premades from API, using placeholder data:', err);
-        // Placeholder data matching the premades DB table structure
-        allCharacters = [
-          { id: 1, name: 'Aragorn', class: 'Rogue', race: 'Human',
-            stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15 } },
-          { id: 2, name: 'Gandalf', class: 'Wizard', race: 'Maia',
-            stats: { STR: 10, DEX: 11, CON: 12, INT: 20, WIS: 18, CHA: 17 } },
-          { id: 3, name: 'Legolas', class: 'Rogue', race: 'Elf',
-            stats: { STR: 13, DEX: 20, CON: 12, INT: 14, WIS: 15, CHA: 13 } },
-          { id: 4, name: 'Gimli', class: 'Barbarian', race: 'Dwarf',
-            stats: { STR: 18, DEX: 10, CON: 18, INT: 11, WIS: 12, CHA: 9 } },
-          { id: 5, name: 'Frodo Baggins', class: 'Rogue', race: 'Hobbit',
-            stats: { STR: 8, DEX: 16, CON: 12, INT: 13, WIS: 14, CHA: 14 } },
-          { id: 6, name: 'Saruman', class: 'Sorcerer', race: 'Maia',
-            stats: { STR: 10, DEX: 12, CON: 13, INT: 19, WIS: 15, CHA: 18 } },
-          { id: 7, name: 'Éowyn', class: 'Barbarian', race: 'Human',
-            stats: { STR: 14, DEX: 15, CON: 13, INT: 12, WIS: 11, CHA: 14 } },
-          { id: 8, name: 'Boromir', class: 'Barbarian', race: 'Human',
-            stats: { STR: 18, DEX: 13, CON: 16, INT: 13, WIS: 11, CHA: 14 } },
-          { id: 9, name: 'Galadriel', class: 'Cleric', race: 'Elf',
-            stats: { STR: 10, DEX: 14, CON: 12, INT: 18, WIS: 20, CHA: 20 } },
-        ];
-      }
-      renderCards();
-    }
-
-    // ── Render cards ──────────────────────────────────────────
-    function renderCards() {
-      const query  = document.getElementById('search-input').value.toLowerCase().trim();
-      const grid   = document.getElementById('card-grid');
-      const status = document.getElementById('status-msg');
-
-      let filtered = allCharacters.filter(c => {
-        const matchSearch = !query ||
-          c.name.toLowerCase().includes(query) ||
-          c.class.toLowerCase().includes(query) ||
-          c.race.toLowerCase().includes(query);
-        const matchClass = !activeClassFilter ||
-          c.class.toLowerCase() === activeClassFilter;
-        return matchSearch && matchClass;
-      });
-
-      grid.innerHTML = '';
-
-      if (filtered.length === 0) {
-        grid.innerHTML = '<div class="no-results">No characters found matching your search.</div>';
+  // ── Fetch premades ─────────────────────────────────────────
+  async function fetchPremades() {
+    try {
+      // TODO: GET /premades — endpoint not yet implemented
+      // Using placeholder data until API is ready
+      const response = await fetch(`${API_BASE}/premade/list`, { headers: {'Content-Type': 'application/json'} });
+      if (response.ok) {
+        allCharacters = await response.json();
       } else {
-        filtered.forEach(c => {
-          const stats = c.stats || {};
-          const card = document.createElement('div');
-          card.className = 'char-card';
-          card.innerHTML = `
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (err) {
+      console.warn('Could not load premades from API, using placeholder data:', err);
+      // Placeholder data matching the premades DB table structure
+      allCharacters = [
+        { id: 1, name: 'Aragorn', class: 'Rogue', race: 'Human',
+          stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15 } },
+        { id: 2, name: 'Gandalf', class: 'Wizard', race: 'Maia',
+          stats: { STR: 10, DEX: 11, CON: 12, INT: 20, WIS: 18, CHA: 17 } },
+        { id: 3, name: 'Legolas', class: 'Rogue', race: 'Elf',
+          stats: { STR: 13, DEX: 20, CON: 12, INT: 14, WIS: 15, CHA: 13 } },
+        { id: 4, name: 'Gimli', class: 'Barbarian', race: 'Dwarf',
+          stats: { STR: 18, DEX: 10, CON: 18, INT: 11, WIS: 12, CHA: 9 } },
+        { id: 5, name: 'Frodo Baggins', class: 'Rogue', race: 'Hobbit',
+          stats: { STR: 8, DEX: 16, CON: 12, INT: 13, WIS: 14, CHA: 14 } },
+        { id: 6, name: 'Saruman', class: 'Sorcerer', race: 'Maia',
+          stats: { STR: 10, DEX: 12, CON: 13, INT: 19, WIS: 15, CHA: 18 } },
+        { id: 7, name: 'Éowyn', class: 'Barbarian', race: 'Human',
+          stats: { STR: 14, DEX: 15, CON: 13, INT: 12, WIS: 11, CHA: 14 } },
+        { id: 8, name: 'Boromir', class: 'Barbarian', race: 'Human',
+          stats: { STR: 18, DEX: 13, CON: 16, INT: 13, WIS: 11, CHA: 14 } },
+        { id: 9, name: 'Galadriel', class: 'Cleric', race: 'Elf',
+          stats: { STR: 10, DEX: 14, CON: 12, INT: 18, WIS: 20, CHA: 20 } },
+      ];
+    }
+    renderCards();
+  }
+
+  // ── Render cards ──────────────────────────────────────────
+  function renderCards() {
+    const query  = document.getElementById('search-input').value.toLowerCase().trim();
+    const grid   = document.getElementById('card-grid');
+    const status = document.getElementById('status-msg');
+
+    let filtered = allCharacters.filter(c => {
+      const matchSearch = !query ||
+              c.name.toLowerCase().includes(query) ||
+              c.class.toLowerCase().includes(query) ||
+              c.race.toLowerCase().includes(query);
+      const matchClass = !activeClassFilter ||
+              c.class.toLowerCase() === activeClassFilter;
+      return matchSearch && matchClass;
+    });
+
+    grid.innerHTML = '';
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-results">No characters found matching your search.</div>';
+    } else {
+      filtered.forEach(c => {
+        const stats = c.stats || {};
+        const card = document.createElement('div');
+        card.className = 'char-card';
+        card.innerHTML = `
             <div class="char-name">${c.name}</div>
             <div class="char-meta">${c.class} · ${c.race}</div>
             <div class="stat-row">
               ${Object.entries(stats).map(([k, v]) =>
                 `<span class="stat-badge"><strong>${k}</strong> ${v}</span>`
-              ).join('')}
+        ).join('')}
             </div>
             <button class="view-btn">View Sheet</button>
           `;
-          card.querySelector('.view-btn').addEventListener('click', () => selectCharacter(c));
-          grid.appendChild(card);
-        });
-      }
-
-      status.style.display = 'none';
-      grid.style.display = 'grid';
-    }
-
-    // ── Select character → go to sheet ───────────────────────
-    function selectCharacter(character) {
-      sessionStorage.setItem('currentSheet', JSON.stringify(character));
-      window.location.href = 'character-sheet.html';
-    }
-
-    // ── Search input ──────────────────────────────────────────
-    document.getElementById('search-input').addEventListener('input', renderCards);
-
-    // ── Filter pills ──────────────────────────────────────────
-    document.querySelectorAll('.filter-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        document.querySelectorAll('.filter-pill[data-filter-type="class"]').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        activeClassFilter = pill.dataset.filterValue;
-        renderCards();
+        card.querySelector('.view-btn').addEventListener('click', () => selectCharacter(c));
+        grid.appendChild(card);
       });
-    });
+    }
 
-    // ── Logout ────────────────────────────────────────────────
-    document.getElementById('logout-link').addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = 'login.html';
-    });
+    status.style.display = 'none';
+    grid.style.display = 'grid';
+  }
 
-    // ── Init ──────────────────────────────────────────────────
-    fetchPremades();
-  </script>
+  // ── Select character → go to sheet ───────────────────────
+  function selectCharacter(character) {
+    sessionStorage.setItem('currentSheet', JSON.stringify(character));
+    window.location.href = '/character/sheet';
+  }
+
+  // ── Search input ──────────────────────────────────────────
+  document.getElementById('search-input').addEventListener('input', renderCards);
+
+  // ── Filter pills ──────────────────────────────────────────
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill[data-filter-type="class"]').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      activeClassFilter = pill.dataset.filterValue;
+      renderCards();
+    });
+  });
+
+  // ── Logout ────────────────────────────────────────────────
+  document.getElementById('logout-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = '/auth/login';
+  });
+
+  // ── Init ──────────────────────────────────────────────────
+  fetchPremades();
+</script>
 </body>
 </html>

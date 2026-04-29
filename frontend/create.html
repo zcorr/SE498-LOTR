@@ -190,180 +190,180 @@
 
 <body>
 
-  <!-- Nav -->
-  <nav class="lotr-nav">
-    <a href="premades.html" class="nav-brand">⚔ Middle-earth Sheets</a>
-    <div class="nav-links">
-      <a href="create.html" class="active">Create Character</a>
-      <a href="premades.html">Premade Characters</a>
-      <a href="#" id="logout-link">Log Out</a>
-    </div>
-  </nav>
+<!-- Nav -->
+<nav class="lotr-nav">
+  <a href="/premade" class="nav-brand">⚔ Middle-earth Sheets</a>
+  <div class="nav-links">
+    <a href="/character/create" class="active">Create Character</a>
+    <a href="/premade">Premade Characters</a>
+    <a href="#" id="logout-link">Log Out</a>
+  </div>
+</nav>
 
-  <main>
-    <div class="page-card">
+<main>
+  <div class="page-card">
 
-      <h1 class="page-title">Create Character</h1>
-      <p class="page-subtitle">Choose a class and race to forge your hero</p>
-      <hr class="divider" />
+    <h1 class="page-title">Create Character</h1>
+    <p class="page-subtitle">Choose a class and race to forge your hero</p>
+    <hr class="divider" />
 
-      <div id="alert-box" role="alert"></div>
+    <div id="alert-box" role="alert"></div>
 
-      <form id="create-form" novalidate>
+    <form id="create-form" novalidate>
 
-        <!-- Character Name -->
-        <div class="mb-3">
-          <label class="form-label" for="char-name">Character Name</label>
-          <input type="text" id="char-name" class="form-control" placeholder="e.g. Aragorn" />
+      <!-- Character Name -->
+      <div class="mb-3">
+        <label class="form-label" for="char-name">Character Name</label>
+        <input type="text" id="char-name" class="form-control" placeholder="e.g. Aragorn" />
+      </div>
+
+      <!-- Class + Race row -->
+      <div class="row g-3 mb-4">
+        <div class="col-6">
+          <label class="form-label" for="class-select">Class</label>
+          <select id="class-select" class="form-select" required>
+            <option value="" disabled selected>Class</option>
+            <!-- TODO: populate dynamically from GET /class -->
+          </select>
         </div>
-
-        <!-- Class + Race row -->
-        <div class="row g-3 mb-4">
-          <div class="col-6">
-            <label class="form-label" for="class-select">Class</label>
-            <select id="class-select" class="form-select" required>
-              <option value="" disabled selected>Class</option>
-              <!-- TODO: populate dynamically from GET /class -->
-            </select>
-          </div>
-          <div class="col-6">
-            <label class="form-label" for="race-select">Race</label>
-            <select id="race-select" class="form-select" required>
-              <option value="" disabled selected>Race</option>
-              <!-- TODO: populate dynamically from GET /race -->
-            </select>
-          </div>
+        <div class="col-6">
+          <label class="form-label" for="race-select">Race</label>
+          <select id="race-select" class="form-select" required>
+            <option value="" disabled selected>Race</option>
+            <!-- TODO: populate dynamically from GET /race -->
+          </select>
         </div>
+      </div>
 
-        <!-- Create button -->
-        <div class="d-flex justify-content-center">
-          <button type="submit" id="submit-btn" class="btn btn-lotr">
-            <span id="btn-label">Create Character</span>
-            <span id="btn-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
-          </button>
-        </div>
+      <!-- Create button -->
+      <div class="d-flex justify-content-center">
+        <button type="submit" id="submit-btn" class="btn btn-lotr">
+          <span id="btn-label">Create Character</span>
+          <span id="btn-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+        </button>
+      </div>
 
-      </form>
+    </form>
 
-      <!-- Divider -->
-      <div class="or-divider">or</div>
+    <!-- Divider -->
+    <div class="or-divider">or</div>
 
-      <!-- Link to premades -->
-      <p style="text-align:center; color:var(--lotr-muted); font-size:0.88rem; margin:0;">
-        Looking for a premade hero?
-        <a href="premades.html" style="color:var(--lotr-accent); text-decoration:underline;">Browse premade characters</a>
-      </p>
+    <!-- Link to premades -->
+    <p style="text-align:center; color:var(--lotr-muted); font-size:0.88rem; margin:0;">
+      Looking for a premade hero?
+      <a href="/premade" style="color:var(--lotr-accent); text-decoration:underline;">Browse premade characters</a>
+    </p>
 
-    </div>
-  </main>
+  </div>
+</main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // ── Auth guard ────────────────────────────────────────────
-    // TODO: re-enable before going live
-    // if (!sessionStorage.getItem('bearerToken')) {
-    //   window.location.href = 'login.html';
-    // }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── Auth guard ────────────────────────────────────────────
+  // TODO: re-enable before going live
+  // if (!sessionStorage.getItem('bearerToken')) {
+  //   window.location.href = '/auth/login';
+  // }
 
-    // ── Config ────────────────────────────────────────────────
-    // TODO: update base URL once Web Server is running
-    const API_BASE = 'http://localhost:5292/api';
+  // ── Config ────────────────────────────────────────────────
+  // TODO: update base URL once Web Server is running
+  const API_BASE = 'http://localhost:5292/api';
 
-    const alertBox   = document.getElementById('alert-box');
-    const submitBtn  = document.getElementById('submit-btn');
-    const btnLabel   = document.getElementById('btn-label');
-    const btnSpinner = document.getElementById('btn-spinner');
+  const alertBox   = document.getElementById('alert-box');
+  const submitBtn  = document.getElementById('submit-btn');
+  const btnLabel   = document.getElementById('btn-label');
+  const btnSpinner = document.getElementById('btn-spinner');
 
-    function showAlert(msg, type = 'error') { alertBox.textContent = msg; alertBox.className = type; }
-    function clearAlert() { alertBox.className = ''; alertBox.textContent = ''; }
-    function setLoading(v) {
-      submitBtn.disabled = v;
-      btnSpinner.classList.toggle('d-none', !v);
-      btnLabel.textContent = v ? 'Generating…' : 'Create Character';
+  function showAlert(msg, type = 'error') { alertBox.textContent = msg; alertBox.className = type; }
+  function clearAlert() { alertBox.className = ''; alertBox.textContent = ''; }
+  function setLoading(v) {
+    submitBtn.disabled = v;
+    btnSpinner.classList.toggle('d-none', !v);
+    btnLabel.textContent = v ? 'Generating…' : 'Create Character';
+  }
+
+
+  // ── Populate dropdowns from API ───────────────────────────
+  async function loadDropdowns() {
+    try {
+      // TODO: GET /class and GET /race — endpoints not yet implemented
+      // Placeholder options until API is ready
+
+      const classes = ['Barbarian', 'Cleric', 'Rogue', 'Sorcerer', 'Wizard'];
+      const races   = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Orc'];
+
+      const classSelect = document.getElementById('class-select');
+      const raceSelect  = document.getElementById('race-select');
+
+
+      classes.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.toLowerCase();
+        opt.textContent = c;
+        classSelect.appendChild(opt);
+      });
+
+
+      races.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.toLowerCase();
+        opt.textContent = r;
+
+        raceSelect.appendChild(opt);
+      });
+
+    } catch (err) {
+      console.warn('Could not load dropdown data from API:', err);
     }
-    
+  }
+  loadDropdowns();
 
-    // ── Populate dropdowns from API ───────────────────────────
-    async function loadDropdowns() {
-      try {
-        // TODO: GET /class and GET /race — endpoints not yet implemented
-        // Placeholder options until API is ready
+  // ── Form submit ───────────────────────────────────────────
+  document.getElementById('create-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearAlert();
 
-        const classes = ['Barbarian', 'Cleric', 'Rogue', 'Sorcerer', 'Wizard'];
-        const races   = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Orc'];
+    const charName = document.getElementById('char-name').value.trim();
+    const classId  = document.getElementById('class-select').value;
+    const raceId = document.getElementById('race-select').value;
 
-        const classSelect = document.getElementById('class-select');
-        const raceSelect  = document.getElementById('race-select');
-
-
-        classes.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.toLowerCase();
-          opt.textContent = c;
-          classSelect.appendChild(opt);
-        });
-
-
-        races.forEach(r => {
-          const opt = document.createElement('option');
-          opt.value = r.toLowerCase();
-          opt.textContent = r;
-
-          raceSelect.appendChild(opt);
-        });
-
-      } catch (err) {
-        console.warn('Could not load dropdown data from API:', err);
-      }
+    if (!classId || !raceId) {
+      showAlert('Please select both a class and a race.');
+      return;
     }
-    loadDropdowns();
 
-    // ── Form submit ───────────────────────────────────────────
-    document.getElementById('create-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearAlert();
+    setLoading(true);
 
-      const charName = document.getElementById('char-name').value.trim();
-      const classId  = document.getElementById('class-select').value;
-      const raceId = document.getElementById('race-select').value;
+    try {
+      const response = await fetch(`${API_BASE}/character/generate`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name: charName, classId, raceId }),
+      });
 
-      if (!classId || !raceId) {
-        showAlert('Please select both a class and a race.');
-        return;
+      if (response.ok) {
+        const sheet = await response.json();
+        // Pass sheet data to character-sheet page via sessionStorage
+        sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
+        window.location.href = '/character/sheet';
+      } else if (response.status === 401) {
+        window.location.href = '/auth/login';
+      } else {
+        showAlert(`Error generating character (${response.status}). Please try again.`);
       }
+    } catch (err) {
+      showAlert('Could not reach the server. Please check your connection.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  });
 
-      setLoading(true);
-
-      try {
-        const response = await fetch(`${API_BASE}/character/generate`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ name: charName, classId, raceId }),
-        });
-
-        if (response.ok) {
-          const sheet = await response.json();
-          // Pass sheet data to character-sheet page via sessionStorage
-          sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
-          window.location.href = 'character-sheet.html';
-        } else if (response.status === 401) {
-          window.location.href = 'login.html';
-        } else {
-          showAlert(`Error generating character (${response.status}). Please try again.`);
-        }
-      } catch (err) {
-        showAlert('Could not reach the server. Please check your connection.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    // ── Logout ────────────────────────────────────────────────
-    document.getElementById('logout-link').addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = 'login.html';
-    });
-  </script>
+  // ── Logout ────────────────────────────────────────────────
+  document.getElementById('logout-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = '/auth/login';
+  });
+</script>
 </body>
 </html>

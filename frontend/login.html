@@ -253,7 +253,7 @@
     //  Expected success response: { "token": "<bearer_token>" }
     // ─────────────────────────────────────────────────────────
     const WEB_SERVER_LOGIN_URL = 'http://localhost:5292/api/auth/login';
-    const WEB_SERVER = 'http://localhost:5292';
+    const WEB_SERVER = 'http://localhost:5292'; // unused , we need login url for proper auth flow
 
     // ─────────────────────────────────────────────────────────
     //  UI helpers
@@ -298,7 +298,7 @@
       setLoading(true);
 
       try {
-        const response = await fetch(WEB_SERVER, {
+        const response = await fetch(WEB_SERVER_LOGIN_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -312,7 +312,7 @@
           // Login successful - redirect to premades
           showAlert('Login successful! Redirecting…', 'success');
           setTimeout(() => {
-            window.location.href = '/premades';
+            window.location.href = '/premade';
           }, 800);
         } else if (response.status === 401) {
           showAlert('Invalid username or password. Please try again.');
