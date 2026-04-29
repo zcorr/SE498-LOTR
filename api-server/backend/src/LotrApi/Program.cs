@@ -304,8 +304,8 @@ app.MapGet("/classes", async (NpgsqlDataSource ds) =>
             {
                 id = reader.GetInt32(0),
                 name = reader.GetString(1),
-                description = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                racial_ids = reader.GetFieldValue<int[]>(3),
+                desc = reader.IsDBNull(2) ? "" : reader.GetString(2),   
+                racialids = reader.GetFieldValue<int[]>(3),          
             });
         }
 
@@ -399,14 +399,59 @@ app.MapPost("/generate", async (GenerateRequest? body, NpgsqlDataSource ds) =>
     var raceModifiers = reader.IsDBNull(5) ? "" : reader.GetString(5);
 
     await reader.CloseAsync();
-    await using var statsCmd = new NpgsqlCommand(
-        "SELECT name, base_value FROM stats ORDER BY name",
-        conn);
-    await using var statsReader = await statsCmd.ExecuteReaderAsync();
-    var statsDict = new Dictionary<string, int>();
-    while (await statsReader.ReadAsync())
-        statsDict[statsReader.GetString(0)] = statsReader.GetInt32(1);
 
+// ── Roll stats: 4d6 drop lowest, per standard D&D rules ──
+    var random = new Random();
+
+    int Roll4d6DropLowest()
+    {
+        var rolls = new int[4];
+        for (int i = 0; i < 4; i++)
+            rolls[i] = random.Next(1, 7); // 1-6 inclusive
+        Array.Sort(rolls);
+        return rolls[1] + rolls[2] + rolls[3]; // drop lowest (index 0)
+    }
+
+// Base rolled stats
+    var statNames = new[] { "strength", "dexterity", "constitution",
+        "intelligence", "wisdom", "charisma" };
+    var statsDict = new Dictionary<string, int>();
+    foreach (var name in statNames)
+        statsDict[name] = Roll4d6DropLowest();
+
+// ── Apply race modifiers ──
+    if (!string.IsNullOrWhiteSpace(raceModifiers))
+    {
+        try
+        {
+            var modifiers = JsonSerializer.Deserialize<Dictionary<string, int>>(raceModifiers);
+            if (modifiers != null)
+            {
+                foreach (var (stat, bonus) in modifiers)
+                {
+                    if (statsDict.ContainsKey(stat))
+                        statsDict[stat] += bonus;
+                }
+            }
+        }
+        catch
+        {
+            // If modifiers aren't valid JSON, skip them
+        }
+    }
+
+// ── Get charhealth from the stats table ──
+    await using var healthCmd = new NpgsqlCommand(
+        "SELECT base_value FROM stats WHERE lower(name) = 'charhealth'",
+        conn);
+    var healthResult = await healthCmd.ExecuteScalarAsync();
+    var baseHealth = healthResult is int h ? h : 20;
+
+// Add charhealth with CON modifier bonus
+    var conModifier = (statsDict["constitution"] - 10) / 2;
+    statsDict["charhealth"] = baseHealth + conModifier;
+    
+    
     var sheet = new
     {
         classId,
