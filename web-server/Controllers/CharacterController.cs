@@ -70,7 +70,7 @@ public class CharacterApiController : ControllerBase
         if (string.IsNullOrWhiteSpace(token))
             return Unauthorized("No authentication token found");
 
-        var classes = await _apiClient.GetAbilitiesAsync(token); // This should be classes, but using abilities for now
+        var classes = await _apiClient.GetClassesAsync(token);
         if (classes == null)
             return StatusCode(500, "Failed to fetch classes");
 
