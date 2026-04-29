@@ -19,7 +19,11 @@ builder.Services.AddHttpClient<ILotrApiClient, LotrApiClient>(client =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Configure JWT authentication
-var jwtSecret = "your-secret-key-here-make-it-long"; // In production, use configuration
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+
+if(string.IsNullOrWhiteSpace(jwtSecret)) {
+	jwtSecret = "Cool_Mega_Secret_Key_For_JWT_Token_Generation";
+}
 var key = Encoding.ASCII.GetBytes(jwtSecret);
 
 builder.Services

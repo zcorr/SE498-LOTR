@@ -20,7 +20,14 @@ public class AuthService : IAuthService
         if (username == "admin" && password == "password")
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes("your-secret-key-here-make-it-long");
+            
+            var jwtSecret = _config["Jwt:Secret"];
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+            {
+                throw new InvalidOperationException("Jwt:Secret is not configured.");
+            }
+            var key = Encoding.ASCII.GetBytes(jwtSecret);
+            
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
@@ -46,7 +53,14 @@ public class AuthService : IAuthService
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes("your-secret-key-here-make-it-long");
+            
+            var jwtSecret = _config["Jwt:Secret"];
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+            {
+                throw new InvalidOperationException("Jwt:Secret is not configured.");
+            }
+            var key = Encoding.ASCII.GetBytes(jwtSecret);
+            
             tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
