@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using web_server.Services;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +59,23 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddSingleton<NpgsqlDataSource>(sp =>
+{
+    var cs = sp.GetRequiredService<IConfiguration>()
+        .GetConnectionString("UsersConnection");
+    if (string.IsNullOrWhiteSpace(cs))
+        throw new InvalidOperationException("ConnectionStrings:UsersConnection is required.");
+    return NpgsqlDataSource.Create(cs);
+});
+
 var app = builder.Build();
+
+// Seed the default admin user on startup
+using (var scope = app.Services.CreateScope())
+{
+    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+    await authService.SeedDefaultUserAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
