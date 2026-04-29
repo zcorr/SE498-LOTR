@@ -35,6 +35,9 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.OpenApi;
 using Npgsql;
 using NpgsqlTypes;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,7 +68,32 @@ builder.Services.AddSingleton<NpgsqlDataSource>(sp =>
 
 builder.Services.AddOpenApi();
 
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+
+if(string.IsNullOrWhiteSpace(jwtSecret)) {
+	jwtSecret = "Cool_Mega_Secret_Key_For_JWT_Token_Generation";
+}
+
+var key  = Encoding.ASCII.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
+	options.RequireHttpsMetadata = false;
+	options.TokenValidationParameters = new TokenValidationParameters{
+		ValidateIssuerSigningKey = true,
+		IssuerSigningKey = new SymmetricSecurityKey(key),
+		ValidateIssuer = false,
+		ValidateAudience = false,
+		ValidateLifetime = true,
+		ClockSkew = TimeSpan.Zero
+	};
+});
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 var connectionString = app.Configuration.GetConnectionString("DefaultConnection");
 if (!string.IsNullOrWhiteSpace(connectionString))
@@ -139,7 +167,8 @@ app.MapGet("/class/{id:int}", async (int id, NpgsqlDataSource ds) =>
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Get class by id (name, desc, racialids).");
+    .WithSummary("Get class by id (name, desc, racialids).")
+	.RequireAuthorization();
 
 app.MapGet("/stats", async (NpgsqlDataSource ds) =>
 {
@@ -162,7 +191,8 @@ app.MapGet("/stats", async (NpgsqlDataSource ds) =>
     return Results.Json(list, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("All stat definitions (base values).");
+    .WithSummary("All stat definitions (base values).")
+	.RequireAuthorization();
 
 app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, CancellationToken cancellationToken) =>
 {
@@ -180,7 +210,8 @@ app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, Cancellatio
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Get a single stat definition by name (case-insensitive).");
+    .WithSummary("Get a single stat definition by name (case-insensitive).")
+	.RequireAuthorization();
 
 app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
 {
@@ -193,7 +224,8 @@ app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Character health stat row (name charhealth).");
+    .WithSummary("Character health stat row (name charhealth).")
+	.RequireAuthorization();
 
 app.MapGet("/strength", async (NpgsqlDataSource ds) =>
 {
@@ -206,7 +238,8 @@ app.MapGet("/strength", async (NpgsqlDataSource ds) =>
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Strength stat row.");
+    .WithSummary("Strength stat row.")
+	.RequireAuthorization();
 
 app.MapGet("/abilities", async (string? class_id, NpgsqlDataSource ds) =>
 {
@@ -219,7 +252,8 @@ app.MapGet("/abilities", async (string? class_id, NpgsqlDataSource ds) =>
     return await Program.GetAbilitiesResultAsync(ds, jsonOptions, parsedClassId);
 })
     .WithTags("Game data")
-    .WithSummary("Abilities (id, name, desc, class_id), optionally filtered by class_id.");
+    .WithSummary("Abilities (id, name, desc, class_id), optionally filtered by class_id.")
+	.RequireAuthorization();
 
 app.MapGet("/class/{id:int}/abilities", async (int id, NpgsqlDataSource ds) =>
 {
@@ -229,7 +263,8 @@ app.MapGet("/class/{id:int}/abilities", async (int id, NpgsqlDataSource ds) =>
     return await Program.GetAbilitiesResultAsync(ds, jsonOptions, id);
 })
     .WithTags("Game data")
-    .WithSummary("Abilities for a specific class id.");
+    .WithSummary("Abilities for a specific class id.")
+	.RequireAuthorization();
 
 app.MapGet("/race", async (NpgsqlDataSource ds) =>
 {
@@ -252,7 +287,8 @@ app.MapGet("/race", async (NpgsqlDataSource ds) =>
     return Results.Json(list, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("All races.");
+    .WithSummary("All races.")
+	.RequireAuthorization();
 
 app.MapGet("/premades", async (NpgsqlDataSource ds) =>
 {
@@ -283,7 +319,8 @@ app.MapGet("/premades", async (NpgsqlDataSource ds) =>
     return Results.Json(list, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Premade characters (class_id, race_id, stats JSON).");
+    .WithSummary("Premade characters (class_id, race_id, stats JSON).")
+	.RequireAuthorization();
 
 app.MapGet("/names", async (NpgsqlDataSource ds) =>
 {
@@ -299,7 +336,8 @@ app.MapGet("/names", async (NpgsqlDataSource ds) =>
     return Results.Json(names, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Premade character names.");
+    .WithSummary("Premade character names.")
+	.RequireAuthorization();
 
 app.MapPost("/generate", async (GenerateRequest? body, NpgsqlDataSource ds) =>
 {
@@ -359,7 +397,8 @@ app.MapPost("/generate", async (GenerateRequest? body, NpgsqlDataSource ds) =>
 })
     .WithTags("Game data")
     .WithSummary("Generate a character sheet for class_id + race_id (race must be allowed for class).")
-    .Accepts<GenerateRequest>("application/json");
+    .Accepts<GenerateRequest>("application/json")
+	.RequireAuthorization();
 
 app.Run();
 
