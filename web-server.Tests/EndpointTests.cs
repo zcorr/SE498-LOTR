@@ -36,6 +36,10 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
     // Tests can configure what data it returns.
     public Mock<ILotrApiClient> MockApiClient { get; } = new();
 
+    // The mock that replaces the real auth service so the startup
+    // SeedDefaultUserAsync() call doesn't try to connect to PostgreSQL.
+    public Mock<IAuthService> MockAuthService { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -60,6 +64,33 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
 
             // ── Register the mock ──
             services.AddSingleton<ILotrApiClient>(MockApiClient.Object);
+
+            // ── Replace IAuthService with a mock ──
+            // The real AuthService talks to PostgreSQL on startup
+            // (SeedDefaultUserAsync). In CI/test envs there is no Postgres,
+            // so we swap in a mock that no-ops the seed and answers the
+            // login/logout endpoints with deterministic responses.
+            var authDescriptors = services
+                .Where(d => d.ServiceType == typeof(IAuthService))
+                .ToList();
+            foreach (var d in authDescriptors)
+                services.Remove(d);
+            services.AddScoped<IAuthService>(_ => MockAuthService.Object);
+
+            MockAuthService
+                .Setup(x => x.SeedDefaultUserAsync())
+                .Returns(Task.CompletedTask);
+            MockAuthService
+                .Setup(x => x.AuthenticateUserAsync("admin", "password"))
+                .ReturnsAsync("test-token");
+            MockAuthService
+                .Setup(x => x.AuthenticateUserAsync(
+                    It.IsAny<string>(),
+                    It.Is<string>(p => p != "password")))
+                .ReturnsAsync((string?)null);
+            MockAuthService
+                .Setup(x => x.ValidateToken(It.IsAny<string>()))
+                .Returns(true);
 
             // ── Set up default mock returns ──
             // Every mock method returns valid but empty data by default.
@@ -87,6 +118,10 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
             MockApiClient
                 .Setup(x => x.GetClassAsync(It.IsAny<int>(), It.IsAny<string>()))
                 .ReturnsAsync((ClassDTO?)null);
+
+            MockApiClient
+                .Setup(x => x.GetClassesAsync(It.IsAny<string>()))
+                .ReturnsAsync(new List<ClassDTO>());
 
             MockApiClient
                 .Setup(x => x.GenerateCharacterAsync(
