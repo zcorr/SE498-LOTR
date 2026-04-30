@@ -14,4 +14,5 @@ public interface ILotrApiClient
     Task<string?> GetCharacterHealthAsync(string bearerToken);
     Task<string?> GetStrengthAsync(string bearerToken);
     Task<string?> GetNamesAsync(string bearerToken);
+    Task<List<ClassDTO>> GetClassesAsync(string bearerToken);
 }

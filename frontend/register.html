@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register — Middle-earth Character Sheets</title>
+
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+    />
+
+    <style>
+        :root {
+            --lotr-bg:         #1a1f14;
+            --lotr-card-bg:    #f5ead6;
+            --lotr-card-border:#8b6914;
+            --lotr-accent:     #8b6914;
+            --lotr-accent-hover:#b38b1d;
+            --lotr-text:       #2c1f08;
+            --lotr-muted:      #7a6040;
+            --lotr-input-bg:   #fdf4e3;
+            --lotr-input-border:#c4a35a;
+            --lotr-error:      #8b1a1a;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--lotr-bg);
+            background-image:
+                    radial-gradient(ellipse at 50% 0%, rgba(139, 105, 20, 0.18) 0%, transparent 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Georgia', serif;
+        }
+
+        .register-card {
+            background-color: var(--lotr-card-bg);
+            border: 2px solid var(--lotr-card-border);
+            border-radius: 6px;
+            padding: 2.5rem 2.75rem 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow:
+                    0 0 0 1px rgba(139, 105, 20, 0.25),
+                    0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--lotr-card-border);
+            margin: 0.5rem 0 1.5rem;
+            opacity: 0.5;
+        }
+
+        .register-title {
+            text-align: center;
+            font-size: 1.85rem;
+            font-weight: bold;
+            color: var(--lotr-text);
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.04em;
+        }
+
+        .register-subtitle {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--lotr-muted);
+            margin-bottom: 0;
+            font-style: italic;
+        }
+
+        .form-control {
+            background-color: var(--lotr-input-bg);
+            border: 1.5px solid var(--lotr-input-border);
+            border-radius: 50px;
+            color: var(--lotr-text);
+            padding: 0.55rem 1.1rem;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control::placeholder {
+            color: var(--lotr-muted);
+            opacity: 0.7;
+        }
+
+        .form-control:focus {
+            background-color: var(--lotr-input-bg);
+            border-color: var(--lotr-accent);
+            box-shadow: 0 0 0 3px rgba(139, 105, 20, 0.2);
+            color: var(--lotr-text);
+            outline: none;
+        }
+
+        .btn-lotr {
+            background-color: var(--lotr-accent);
+            border: 1.5px solid var(--lotr-accent);
+            border-radius: 50px;
+            color: #fff8e7;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            letter-spacing: 0.05em;
+            padding: 0.5rem 2.5rem;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+        }
+
+        .btn-lotr:hover {
+            background-color: var(--lotr-accent-hover);
+            border-color: var(--lotr-accent-hover);
+            color: #fff8e7;
+            transform: translateY(-1px);
+        }
+
+        .btn-lotr:active { transform: translateY(0); }
+        .btn-lotr:disabled { opacity: 0.65; cursor: not-allowed; }
+
+        .login-link {
+            color: var(--lotr-accent);
+            text-decoration: underline;
+            font-size: 0.88rem;
+        }
+
+        .login-link:hover { color: var(--lotr-accent-hover); }
+
+        .footer-text {
+            text-align: center;
+            color: var(--lotr-muted);
+            font-size: 0.88rem;
+            margin-top: 1.2rem;
+            margin-bottom: 0;
+        }
+
+        #alert-box {
+            display: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #alert-box.error {
+            display: block;
+            background-color: #f8d7d7;
+            border: 1px solid var(--lotr-error);
+            color: var(--lotr-error);
+        }
+
+        #alert-box.success {
+            display: block;
+            background-color: #d4edda;
+            border: 1px solid #276432;
+            color: #276432;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        .pw-hint {
+            font-size: 0.75rem;
+            color: var(--lotr-muted);
+            margin-top: 0.25rem;
+            padding-left: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+<div class="register-card">
+
+    <h1 class="register-title">Create Account</h1>
+    <p class="register-subtitle">Join the Fellowship</p>
+    <hr class="divider" />
+
+    <div id="alert-box" role="alert"></div>
+
+    <form id="register-form" novalidate>
+
+        <div class="mb-3">
+            <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    class="form-control"
+                    placeholder="username"
+                    autocomplete="username"
+                    required
+            />
+        </div>
+
+        <div class="mb-3">
+            <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="form-control"
+                    placeholder="password"
+                    autocomplete="new-password"
+                    required
+            />
+            <p class="pw-hint">Must be at least 6 characters</p>
+        </div>
+
+        <div class="mb-4">
+            <input
+                    type="password"
+                    id="confirm-password"
+                    name="confirm-password"
+                    class="form-control"
+                    placeholder="confirm password"
+                    autocomplete="new-password"
+                    required
+            />
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <button type="submit" id="submit-btn" class="btn btn-lotr">
+                <span id="btn-label">Create Account</span>
+                <span id="btn-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+            </button>
+        </div>
+
+    </form>
+
+    <p class="footer-text">
+        Already have an account?
+        <a href="/auth/login" class="login-link">log in</a>
+    </p>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const API_BASE = 'http://localhost:5292/api';
+
+    const alertBox   = document.getElementById('alert-box');
+    const submitBtn  = document.getElementById('submit-btn');
+    const btnLabel   = document.getElementById('btn-label');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    function showAlert(message, type = 'error') {
+        alertBox.textContent = message;
+        alertBox.className = type;
+    }
+
+    function clearAlert() {
+        alertBox.className = '';
+        alertBox.textContent = '';
+    }
+
+    function setLoading(loading) {
+        submitBtn.disabled = loading;
+        btnSpinner.classList.toggle('d-none', !loading);
+        btnLabel.textContent = loading ? 'Creating…' : 'Create Account';
+    }
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearAlert();
+
+        const username        = document.getElementById('username').value.trim();
+        const password        = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (!username || !password) {
+            showAlert('Please enter both a username and password.');
+            return;
+        }
+
+        if (password.length < 6) {
+            showAlert('Password must be at least 6 characters.');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showAlert('Passwords do not match.');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (response.ok) {
+                showAlert('Account created! Redirecting to login…', 'success');
+                setTimeout(() => {
+                    window.location.href = '/auth/login';
+                }, 1200);
+            } else if (response.status === 409) {
+                showAlert('That username is already taken. Please choose another.');
+            } else if (response.status === 400) {
+                const result = await response.text();
+                showAlert(result || 'Invalid input. Please check your fields.');
+            } else {
+                showAlert(`Unexpected error (${response.status}). Please try again.`);
+            }
+
+        } catch (err) {
+            showAlert('Could not reach the server. Please check your connection.');
+            console.error('Registration error:', err);
+        } finally {
+            setLoading(false);
+        }
+    });
+</script>
+</body>
+</html>

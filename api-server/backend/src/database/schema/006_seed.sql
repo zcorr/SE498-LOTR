@@ -8,11 +8,11 @@
 
 INSERT INTO races (id, name, modifiers)
 VALUES
-    (1, 'Hobbit', 'Nimble; hardy'),
-    (2, 'Human', 'Adaptable'),
-    (3, 'Elf', 'Keen senses'),
-    (4, 'Dwarf', 'Stout; unyielding')
-ON CONFLICT (id) DO UPDATE SET
+    (1, 'Hobbit', '{"dexterity": 2, "constitution": 1}'),
+    (2, 'Human', '{"strength": 1, "dexterity": 1, "constitution": 1, "intelligence": 1, "wisdom": 1, "charisma": 1}'),
+    (3, 'Elf', '{"dexterity": 2, "wisdom": 1}'),
+    (4, 'Dwarf', '{"constitution": 2, "strength": 1}')
+    ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     modifiers = EXCLUDED.modifiers;
 

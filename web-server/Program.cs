@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using web_server.Services;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,9 +18,14 @@ builder.Services.AddHttpClient<ILotrApiClient, LotrApiClient>(client =>
 
 // Register auth service
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICharacterSheetService, CharacterSheetService>();
 
 // Configure JWT authentication
-var jwtSecret = "your-secret-key-here-make-it-long"; // In production, use configuration
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+
+if(string.IsNullOrWhiteSpace(jwtSecret)) {
+	jwtSecret = "Cool_Mega_Secret_Key_For_JWT_Token_Generation";
+}
 var key = Encoding.ASCII.GetBytes(jwtSecret);
 
 builder.Services
@@ -54,7 +60,23 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddSingleton<NpgsqlDataSource>(sp =>
+{
+    var cs = sp.GetRequiredService<IConfiguration>()
+        .GetConnectionString("UsersConnection");
+    if (string.IsNullOrWhiteSpace(cs))
+        throw new InvalidOperationException("ConnectionStrings:UsersConnection is required.");
+    return NpgsqlDataSource.Create(cs);
+});
+
 var app = builder.Build();
+
+// Seed the default admin user on startup
+using (var scope = app.Services.CreateScope())
+{
+    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+    await authService.SeedDefaultUserAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -82,3 +104,6 @@ app.MapControllerRoute(
 app.MapControllers();
 
 app.Run();
+
+
+public partial class Program;

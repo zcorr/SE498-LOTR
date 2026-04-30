@@ -202,4 +202,23 @@ public class LotrApiClient : ILotrApiClient
         catch { }
         return null;
     }
+    
+    public async Task<List<ClassDTO>> GetClassesAsync(string bearerToken)
+    {
+        AddAuthHeader(bearerToken);
+        try {
+            var response = await _httpClient.GetAsync("/classes");
+            if (response.IsSuccessStatusCode) {
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<List<ClassDTO>>(json, new JsonSerializerOptions {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+                return result ?? new List<ClassDTO>();
+            }
+        }
+        catch {
+            
+        }
+        return new List<ClassDTO>();
+    }
 }

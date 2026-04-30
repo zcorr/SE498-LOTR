@@ -552,466 +552,461 @@
 
 <body>
 
-  <!-- Nav -->
-  <nav class="lotr-nav">
-    <a href="premades.html" class="nav-brand">⚔ Middle-earth Sheets</a>
-    <div class="nav-links">
-      <a href="create.html">Create Character</a>
-      <a href="premades.html">Premade Characters</a>
-      <a href="#" id="logout-link">Log Out</a>
+<!-- Nav -->
+<nav class="lotr-nav">
+  <a href="/premade" class="nav-brand">⚔ Middle-earth Sheets</a>
+  <div class="nav-links">
+    <a href="/character/create">Create Character</a>
+    <a href="/my-characters">My Characters</a>
+    <a href="/premade">Premade Characters</a>
+    <a href="#" id="logout-link">Log Out</a>
+  </div>
+</nav>
+
+<main>
+  <div class="above-sheet-bar">
+    <a href="javascript:history.back()" class="back-btn">← Back</a>
+    <button class="print-btn" onclick="window.print()">🖨 Print</button>
+  </div>
+  <div class="sheet-wrap">
+
+    <!-- Character name banner -->
+    <div class="sheet-header">
+      <div class="header-name-block">
+        <div class="char-name-display" id="hdr-name">—</div>
+        <div class="char-name-label">Character Name</div>
+      </div>
+      <div class="header-meta-grid">
+        <div class="meta-cell"><div class="meta-value" id="hdr-class">—</div><div class="meta-label">Class &amp; Level</div></div>
+        <div class="meta-cell"><div class="meta-value" id="hdr-background">—</div><div class="meta-label">Background</div></div>
+        <div class="meta-cell"><div class="meta-value" id="hdr-player">—</div><div class="meta-label">Player Name</div></div>
+        <div class="meta-cell"><div class="meta-value" id="hdr-race">—</div><div class="meta-label">Race</div></div>
+        <div class="meta-cell"><div class="meta-value" id="hdr-alignment">—</div><div class="meta-label">Alignment</div></div>
+        <div class="meta-cell"><div class="meta-value" id="hdr-xp">0</div><div class="meta-label">Experience Points</div></div>
+      </div>
     </div>
-  </nav>
 
-  <main>
-    <div class="above-sheet-bar">
-      <a href="javascript:history.back()" class="back-btn">← Back</a>
-      <button class="print-btn" onclick="window.print()">🖨 Print</button>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 1 — MAIN SHEET
+    ════════════════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="tab-main">
+      <div class="sheet-body">
+
+        <!-- Ability scores + Passive Wisdom -->
+        <div style="display:flex; flex-direction:column; gap:0.6rem;">
+          <div class="ability-col" id="ability-col">
+            <!-- Populated by JS -->
+          </div>
+          <div class="passive-box">
+            <span style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--lotr-muted);">Passive Wisdom (Perception)</span>
+            <span class="passive-val" id="stat-passive">10</span>
+          </div>
+        </div>
+
+        <!-- Saves & Skills -->
+        <div class="skills-col">
+
+          <!-- Inspiration + Proficiency Bonus -->
+          <div class="insp-prof-row">
+            <div class="number-box">
+              <div class="val" id="stat-inspiration">—</div>
+              <div class="field-label">Inspiration</div>
+            </div>
+            <div class="number-box">
+              <div class="val" id="stat-proficiency">+2</div>
+              <div class="field-label">Proficiency Bonus</div>
+            </div>
+          </div>
+
+          <!-- Saving Throws -->
+          <div class="check-list">
+            <div id="saving-throws-list"><!-- filled by JS --></div>
+            <div class="section-label">Saving Throws</div>
+          </div>
+
+          <!-- Skills -->
+          <div class="check-list">
+            <div id="skills-list"><!-- filled by JS --></div>
+            <div class="section-label">Skills</div>
+          </div>
+
+          <!-- Other Proficiencies -->
+          <div class="proficiency-box">
+            <div style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--lotr-muted); margin-bottom:0.3rem;">Other Proficiencies &amp; Languages</div>
+            <div id="other-proficiencies" style="font-size:0.78rem; color:var(--lotr-text);">—</div>
+          </div>
+
+        </div>
+
+        <!-- Combat stats -->
+        <div class="combat-col">
+
+          <!-- AC / Initiative / Speed -->
+          <div class="combat-top">
+            <div class="combat-box">
+              <div class="val" id="stat-ac">—</div>
+              <div class="field-label">Armor Class</div>
+            </div>
+            <div class="combat-box">
+              <div class="val" id="stat-initiative">—</div>
+              <div class="field-label">Initiative</div>
+            </div>
+            <div class="combat-box">
+              <div class="val" id="stat-speed">30</div>
+              <div class="field-label">Speed</div>
+            </div>
+          </div>
+
+          <!-- Hit Points -->
+          <div class="hp-section">
+            <div class="hp-max-row">
+              <span class="hp-max-label">Hit Point Maximum</span>
+              <span class="hp-max-val" id="stat-hp-max">—</span>
+            </div>
+            <div class="hp-current" style="padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Current Hit Points</div>
+            <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Current Hit Points</div>
+            <div class="hp-current" style="margin-top:0.3rem; padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Temporary Hit Points</div>
+            <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Temporary Hit Points</div>
+          </div>
+
+          <!-- Hit Dice + Death Saves -->
+          <div class="dice-saves-row">
+            <div class="dice-box">
+              <div style="min-height:28px; font-size:0.88rem; color:var(--lotr-text); font-weight:bold;" id="stat-hit-dice">—</div>
+              <div class="section-label">Hit Dice</div>
+              <div style="display:flex; align-items:center; gap:0.3rem; margin-top:0.3rem;">
+                <span style="font-size:0.72rem; color:var(--lotr-muted);">Total:</span>
+                <div style="flex:1; background:var(--lotr-input-bg); border:1px solid var(--lotr-input-border); border-radius:3px; height:18px;"></div>
+              </div>
+            </div>
+            <div class="saves-box">
+              <div class="saves-row">
+                <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Successes</span>
+                <div class="save-circles">
+                  <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
+                </div>
+              </div>
+              <div class="saves-row">
+                <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Failures</span>
+                <div class="save-circles">
+                  <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
+                </div>
+              </div>
+              <div class="section-label">Death Saves</div>
+            </div>
+          </div>
+
+          <!-- Attacks & Spellcasting -->
+          <div class="attacks-box">
+            <div class="attacks-header">
+              <span>Name</span><span>ATK Bonus</span><span>Damage / Type</span>
+            </div>
+            <div id="attacks-list">
+              <!-- Filled by JS -->
+            </div>
+            <div class="section-label">Attacks &amp; Spellcasting</div>
+          </div>
+
+          <!-- Equipment -->
+          <div class="equipment-box">
+            <div id="equipment-content" style="font-size:0.78rem; color:var(--lotr-text); min-height:60px;">—</div>
+            <div class="section-label">Equipment</div>
+          </div>
+
+        </div>
+
+        <!-- Traits column -->
+        <div class="traits-col">
+          <div class="trait-box">
+            <div class="trait-content" id="trait-personality">—</div>
+            <div class="section-label">Personality Traits</div>
+          </div>
+          <div class="trait-box">
+            <div class="trait-content" id="trait-ideals">—</div>
+            <div class="section-label">Ideals</div>
+          </div>
+          <div class="trait-box">
+            <div class="trait-content" id="trait-bonds">—</div>
+            <div class="section-label">Bonds</div>
+          </div>
+          <div class="trait-box">
+            <div class="trait-content" id="trait-flaws">—</div>
+            <div class="section-label">Flaws</div>
+          </div>
+          <div class="trait-box" style="flex:2;">
+            <div class="trait-content" id="features-traits">—</div>
+            <div class="section-label">Features &amp; Traits</div>
+          </div>
+        </div>
+
+      </div>
     </div>
-    <div class="sheet-wrap">
 
-      <!-- Character name banner -->
-      <div class="sheet-header">
-        <div class="header-name-block">
-          <div class="char-name-display" id="hdr-name">—</div>
-          <div class="char-name-label">Character Name</div>
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 2 — BACKGROUND
+    ════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-background">
+
+      <!-- Background header meta -->
+      <div class="bg-header-grid">
+        <div class="meta-cell"><div class="meta-value" id="bg-age">—</div><div class="meta-label">Age</div></div>
+        <div class="meta-cell"><div class="meta-value" id="bg-height">—</div><div class="meta-label">Height</div></div>
+        <div class="meta-cell"><div class="meta-value" id="bg-weight">—</div><div class="meta-label">Weight</div></div>
+        <div class="meta-cell"><div class="meta-value" id="bg-eyes">—</div><div class="meta-label">Eyes</div></div>
+        <div class="meta-cell"><div class="meta-value" id="bg-skin">—</div><div class="meta-label">Skin</div></div>
+        <div class="meta-cell"><div class="meta-value" id="bg-hair">—</div><div class="meta-label">Hair</div></div>
+      </div>
+
+      <div class="bg-body">
+        <div class="bg-left">
+          <div class="bg-box" style="min-height:280px;">
+            <div class="bg-box-content" id="bg-appearance">—</div>
+            <div class="section-label">Character Appearance</div>
+          </div>
+          <div class="bg-box" style="flex:1;">
+            <div class="bg-box-content" id="bg-backstory">—</div>
+            <div class="section-label">Character Backstory</div>
+          </div>
         </div>
-        <div class="header-meta-grid">
-          <div class="meta-cell"><div class="meta-value" id="hdr-class">—</div><div class="meta-label">Class &amp; Level</div></div>
-          <div class="meta-cell"><div class="meta-value" id="hdr-background">—</div><div class="meta-label">Background</div></div>
-          <div class="meta-cell"><div class="meta-value" id="hdr-player">—</div><div class="meta-label">Player Name</div></div>
-          <div class="meta-cell"><div class="meta-value" id="hdr-race">—</div><div class="meta-label">Race</div></div>
-          <div class="meta-cell"><div class="meta-value" id="hdr-alignment">—</div><div class="meta-label">Alignment</div></div>
-          <div class="meta-cell"><div class="meta-value" id="hdr-xp">0</div><div class="meta-label">Experience Points</div></div>
+        <div class="bg-right">
+          <div class="bg-box" style="min-height:280px;">
+            <div class="bg-box-content" id="bg-allies">—</div>
+            <div class="section-label">Allies &amp; Organizations</div>
+          </div>
+          <div class="bg-box" style="flex:1;">
+            <div class="bg-box-content" id="bg-features">—</div>
+            <div class="section-label">Additional Features &amp; Traits</div>
+          </div>
+          <div class="bg-box">
+            <div class="bg-box-content" id="bg-treasure">—</div>
+            <div class="section-label">Treasure</div>
+          </div>
         </div>
       </div>
 
+    </div>
 
-      <!-- ═══════════════════════════════════════════════════════
-           TAB 1 — MAIN SHEET
-      ════════════════════════════════════════════════════════ -->
-      <div class="tab-panel active" id="tab-main">
-        <div class="sheet-body">
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 3 — SPELLCASTING
+    ════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-spells">
 
-          <!-- Ability scores + Passive Wisdom -->
-          <div style="display:flex; flex-direction:column; gap:0.6rem;">
-            <div class="ability-col" id="ability-col">
-              <!-- Populated by JS -->
-            </div>
-            <div class="passive-box">
-              <span style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--lotr-muted);">Passive Wisdom (Perception)</span>
-              <span class="passive-val" id="stat-passive">10</span>
-            </div>
-          </div>
-
-          <!-- Saves & Skills -->
-          <div class="skills-col">
-
-            <!-- Inspiration + Proficiency Bonus -->
-            <div class="insp-prof-row">
-              <div class="number-box">
-                <div class="val" id="stat-inspiration">—</div>
-                <div class="field-label">Inspiration</div>
-              </div>
-              <div class="number-box">
-                <div class="val" id="stat-proficiency">+2</div>
-                <div class="field-label">Proficiency Bonus</div>
-              </div>
-            </div>
-
-            <!-- Saving Throws -->
-            <div class="check-list">
-              <div id="saving-throws-list"><!-- filled by JS --></div>
-              <div class="section-label">Saving Throws</div>
-            </div>
-
-            <!-- Skills -->
-            <div class="check-list">
-              <div id="skills-list"><!-- filled by JS --></div>
-              <div class="section-label">Skills</div>
-            </div>
-
-            <!-- Other Proficiencies -->
-            <div class="proficiency-box">
-              <div style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--lotr-muted); margin-bottom:0.3rem;">Other Proficiencies &amp; Languages</div>
-              <div id="other-proficiencies" style="font-size:0.78rem; color:var(--lotr-text);">—</div>
-            </div>
-
-          </div>
-
-          <!-- Combat stats -->
-          <div class="combat-col">
-
-            <!-- AC / Initiative / Speed -->
-            <div class="combat-top">
-              <div class="combat-box">
-                <div class="val" id="stat-ac">—</div>
-                <div class="field-label">Armor Class</div>
-              </div>
-              <div class="combat-box">
-                <div class="val" id="stat-initiative">—</div>
-                <div class="field-label">Initiative</div>
-              </div>
-              <div class="combat-box">
-                <div class="val" id="stat-speed">30</div>
-                <div class="field-label">Speed</div>
-              </div>
-            </div>
-
-            <!-- Hit Points -->
-            <div class="hp-section">
-              <div class="hp-max-row">
-                <span class="hp-max-label">Hit Point Maximum</span>
-                <span class="hp-max-val" id="stat-hp-max">—</span>
-              </div>
-              <div class="hp-current" style="padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Current Hit Points</div>
-              <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Current Hit Points</div>
-              <div class="hp-current" style="margin-top:0.3rem; padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Temporary Hit Points</div>
-              <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Temporary Hit Points</div>
-            </div>
-
-            <!-- Hit Dice + Death Saves -->
-            <div class="dice-saves-row">
-              <div class="dice-box">
-                <div style="min-height:28px; font-size:0.88rem; color:var(--lotr-text); font-weight:bold;" id="stat-hit-dice">—</div>
-                <div class="section-label">Hit Dice</div>
-                <div style="display:flex; align-items:center; gap:0.3rem; margin-top:0.3rem;">
-                  <span style="font-size:0.72rem; color:var(--lotr-muted);">Total:</span>
-                  <div style="flex:1; background:var(--lotr-input-bg); border:1px solid var(--lotr-input-border); border-radius:3px; height:18px;"></div>
-                </div>
-              </div>
-              <div class="saves-box">
-                <div class="saves-row">
-                  <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Successes</span>
-                  <div class="save-circles">
-                    <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
-                  </div>
-                </div>
-                <div class="saves-row">
-                  <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Failures</span>
-                  <div class="save-circles">
-                    <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
-                  </div>
-                </div>
-                <div class="section-label">Death Saves</div>
-              </div>
-            </div>
-
-            <!-- Attacks & Spellcasting -->
-            <div class="attacks-box">
-              <div class="attacks-header">
-                <span>Name</span><span>ATK Bonus</span><span>Damage / Type</span>
-              </div>
-              <div id="attacks-list">
-                <!-- Filled by JS -->
-              </div>
-              <div class="section-label">Attacks &amp; Spellcasting</div>
-            </div>
-
-            <!-- Equipment -->
-            <div class="equipment-box">
-              <div id="equipment-content" style="font-size:0.78rem; color:var(--lotr-text); min-height:60px;">—</div>
-              <div class="section-label">Equipment</div>
-            </div>
-
-          </div>
-
-          <!-- Traits column -->
-          <div class="traits-col">
-            <div class="trait-box">
-              <div class="trait-content" id="trait-personality">—</div>
-              <div class="section-label">Personality Traits</div>
-            </div>
-            <div class="trait-box">
-              <div class="trait-content" id="trait-ideals">—</div>
-              <div class="section-label">Ideals</div>
-            </div>
-            <div class="trait-box">
-              <div class="trait-content" id="trait-bonds">—</div>
-              <div class="section-label">Bonds</div>
-            </div>
-            <div class="trait-box">
-              <div class="trait-content" id="trait-flaws">—</div>
-              <div class="section-label">Flaws</div>
-            </div>
-            <div class="trait-box" style="flex:2;">
-              <div class="trait-content" id="features-traits">—</div>
-              <div class="section-label">Features &amp; Traits</div>
-            </div>
-          </div>
-
+      <div class="spell-header">
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--lotr-muted); margin-bottom:0.2rem;">Spellcasting Class</div>
+          <div style="font-size:1rem; color:var(--lotr-text); font-weight:bold;" id="spell-class">—</div>
+        </div>
+        <div class="number-box">
+          <div class="val" id="spell-ability">—</div>
+          <div class="field-label">Spellcasting Ability</div>
+        </div>
+        <div class="number-box">
+          <div class="val" id="spell-save-dc">—</div>
+          <div class="field-label">Spell Save DC</div>
+        </div>
+        <div class="number-box">
+          <div class="val" id="spell-atk-bonus">—</div>
+          <div class="field-label">Spell Attack Bonus</div>
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════
-           TAB 2 — BACKGROUND
-      ════════════════════════════════════════════════════════ -->
-      <div class="tab-panel" id="tab-background">
-
-        <!-- Background header meta -->
-        <div class="bg-header-grid">
-          <div class="meta-cell"><div class="meta-value" id="bg-age">—</div><div class="meta-label">Age</div></div>
-          <div class="meta-cell"><div class="meta-value" id="bg-height">—</div><div class="meta-label">Height</div></div>
-          <div class="meta-cell"><div class="meta-value" id="bg-weight">—</div><div class="meta-label">Weight</div></div>
-          <div class="meta-cell"><div class="meta-value" id="bg-eyes">—</div><div class="meta-label">Eyes</div></div>
-          <div class="meta-cell"><div class="meta-value" id="bg-skin">—</div><div class="meta-label">Skin</div></div>
-          <div class="meta-cell"><div class="meta-value" id="bg-hair">—</div><div class="meta-label">Hair</div></div>
-        </div>
-
-        <div class="bg-body">
-          <div class="bg-left">
-            <div class="bg-box" style="min-height:280px;">
-              <div class="bg-box-content" id="bg-appearance">—</div>
-              <div class="section-label">Character Appearance</div>
-            </div>
-            <div class="bg-box" style="flex:1;">
-              <div class="bg-box-content" id="bg-backstory">—</div>
-              <div class="section-label">Character Backstory</div>
-            </div>
-          </div>
-          <div class="bg-right">
-            <div class="bg-box" style="min-height:280px;">
-              <div class="bg-box-content" id="bg-allies">—</div>
-              <div class="section-label">Allies &amp; Organizations</div>
-            </div>
-            <div class="bg-box" style="flex:1;">
-              <div class="bg-box-content" id="bg-features">—</div>
-              <div class="section-label">Additional Features &amp; Traits</div>
-            </div>
-            <div class="bg-box">
-              <div class="bg-box-content" id="bg-treasure">—</div>
-              <div class="section-label">Treasure</div>
-            </div>
-          </div>
-        </div>
-
+      <div class="spell-body" id="spell-body">
+        <!-- Populated by JS -->
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════
-           TAB 3 — SPELLCASTING
-      ════════════════════════════════════════════════════════ -->
-      <div class="tab-panel" id="tab-spells">
+    </div>
 
-        <div class="spell-header">
-          <div>
-            <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--lotr-muted); margin-bottom:0.2rem;">Spellcasting Class</div>
-            <div style="font-size:1rem; color:var(--lotr-text); font-weight:bold;" id="spell-class">—</div>
-          </div>
-          <div class="number-box">
-            <div class="val" id="spell-ability">—</div>
-            <div class="field-label">Spellcasting Ability</div>
-          </div>
-          <div class="number-box">
-            <div class="val" id="spell-save-dc">—</div>
-            <div class="field-label">Spell Save DC</div>
-          </div>
-          <div class="number-box">
-            <div class="val" id="spell-atk-bonus">—</div>
-            <div class="field-label">Spell Attack Bonus</div>
-          </div>
-        </div>
+  </div><!-- /.sheet-wrap -->
+</main>
 
-        <div class="spell-body" id="spell-body">
-          <!-- Populated by JS -->
-        </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── Load sheet data ───────────────────────────────────────
+  // Data is expected from sessionStorage, set by create.html or premades.html
+  // TODO: shape here mirrors what POST /generate and GET /premades will return
+  const raw = sessionStorage.getItem('currentSheet');
 
-      </div>
+  // Dev preview data — remove before going live
+  const DEV_PREVIEW = {
+    name: 'Aragorn', class: 'Rogue', race: 'Human',
+    background: 'Outlander', playerName: 'Kylee', alignment: 'Lawful Good', xp: '0',
+    stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15, charhealth: 44 },
+    armorClass: 14, speed: '30', hitDice: '5d8',
+    personalityTraits: 'I have a lesson for every situation, drawn from my time in the wild.',
+    ideals: 'Responsibility. I do what I must and obey just authority.',
+    bonds: 'I fight for those who cannot fight for themselves.',
+    flaws: 'I have trouble trusting in my allies.',
+    featuresTraits: 'Darkvision, Fey Ancestry, Thieves\' Cant, Sneak Attack 3d6',
+    proficiencies: 'Common, Elvish, Dwarvish. Thieves\' tools, disguise kit.',
+    equipment: 'Shortsword, hand crossbow, leather armor, thieves\' tools, explorer\'s pack',
+    attacks: [
+      { name: 'Shortsword', atkBonus: '+6', damage: '1d6+4 piercing' },
+      { name: 'Hand Crossbow', atkBonus: '+6', damage: '1d6+4 piercing' },
+    ],
+    age: '87', height: '6\'2"', weight: '195 lb', eyes: 'Grey', skin: 'Tan', hair: 'Dark Brown',
+    appearance: 'Tall and weather-worn, with grey eyes that hold both sorrow and determination.',
+    backstory: 'Raised by elves in Rivendell after his father\'s death, Aragorn wandered Middle-earth as the Ranger "Strider" for decades, guarding the Shire and the free peoples of the North.',
+    allies: 'The Fellowship of the Ring. Gandalf the Grey. The Rangers of the North.',
+    additionalFeatures: 'Uncanny Dodge, Evasion, Expertise (Stealth, Perception)',
+    treasure: '50 gp, a broken sword (Narsil heirloom)',
+  };
 
-    </div><!-- /.sheet-wrap -->
-  </main>
+  const sheet = normalizeSheetData(raw ? JSON.parse(raw) : DEV_PREVIEW);
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // ── Auth guard ────────────────────────────────────────────
-    // TODO: re-enable before going live
-    // if (!sessionStorage.getItem('bearerToken')) {
-    //   window.location.href = 'login.html';
-    // }
-
-    // ── Load sheet data ───────────────────────────────────────
-    // Data is expected from sessionStorage, set by create.html or premades.html
-    // TODO: shape here mirrors what POST /generate and GET /premades will return
-    const raw = sessionStorage.getItem('currentSheet');
-
-    // Dev preview data — remove before going live
-    const DEV_PREVIEW = {
-      name: 'Aragorn', class: 'Rogue', race: 'Human',
-      background: 'Outlander', playerName: 'Kylee', alignment: 'Lawful Good', xp: '0',
-      stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15, charhealth: 44 },
-      armorClass: 14, speed: '30', hitDice: '5d8',
-      personalityTraits: 'I have a lesson for every situation, drawn from my time in the wild.',
-      ideals: 'Responsibility. I do what I must and obey just authority.',
-      bonds: 'I fight for those who cannot fight for themselves.',
-      flaws: 'I have trouble trusting in my allies.',
-      featuresTraits: 'Darkvision, Fey Ancestry, Thieves\' Cant, Sneak Attack 3d6',
-      proficiencies: 'Common, Elvish, Dwarvish. Thieves\' tools, disguise kit.',
-      equipment: 'Shortsword, hand crossbow, leather armor, thieves\' tools, explorer\'s pack',
-      attacks: [
-        { name: 'Shortsword', atkBonus: '+6', damage: '1d6+4 piercing' },
-        { name: 'Hand Crossbow', atkBonus: '+6', damage: '1d6+4 piercing' },
-      ],
-      age: '87', height: '6\'2"', weight: '195 lb', eyes: 'Grey', skin: 'Tan', hair: 'Dark Brown',
-      appearance: 'Tall and weather-worn, with grey eyes that hold both sorrow and determination.',
-      backstory: 'Raised by elves in Rivendell after his father\'s death, Aragorn wandered Middle-earth as the Ranger "Strider" for decades, guarding the Shire and the free peoples of the North.',
-      allies: 'The Fellowship of the Ring. Gandalf the Grey. The Rangers of the North.',
-      additionalFeatures: 'Uncanny Dodge, Evasion, Expertise (Stealth, Perception)',
-      treasure: '50 gp, a broken sword (Narsil heirloom)',
+  // ── Helpers ───────────────────────────────────────────────
+  function normalizeSheetData(data) {
+    return {
+      ...data,
+      class: data?.class ?? data?.className,
+      race: data?.race ?? data?.raceName,
     };
+  }
+  function mod(score) {
+    const m = Math.floor((score - 10) / 2);
+    return (m >= 0 ? '+' : '') + m;
+  }
+  function set(id, val) {
+    const el = document.getElementById(id);
+    if (el && val !== undefined && val !== null) el.textContent = val;
+  }
 
-    const sheet = normalizeSheetData(raw ? JSON.parse(raw) : DEV_PREVIEW);
+  // ── Ability score definitions ─────────────────────────────
+  const ABILITIES = [
+    { key: 'STR', label: 'Strength' },
+    { key: 'DEX', label: 'Dexterity' },
+    { key: 'CON', label: 'Constitution' },
+    { key: 'INT', label: 'Intelligence' },
+    { key: 'WIS', label: 'Wisdom' },
+    { key: 'CHA', label: 'Charisma' },
+  ];
 
-    // ── Helpers ───────────────────────────────────────────────
-    function normalizeSheetData(data) {
-      return {
-        ...data,
-        class: data?.class ?? data?.className,
-        race: data?.race ?? data?.raceName,
-      };
-    }
-    function mod(score) {
-      const m = Math.floor((score - 10) / 2);
-      return (m >= 0 ? '+' : '') + m;
-    }
-    function set(id, val) {
-      const el = document.getElementById(id);
-      if (el && val !== undefined && val !== null) el.textContent = val;
-    }
+  const SAVING_THROWS = [
+    { key: 'STR', label: 'Strength' },
+    { key: 'DEX', label: 'Dexterity' },
+    { key: 'CON', label: 'Constitution' },
+    { key: 'INT', label: 'Intelligence' },
+    { key: 'WIS', label: 'Wisdom' },
+    { key: 'CHA', label: 'Charisma' },
+  ];
 
-    // ── Ability score definitions ─────────────────────────────
-    const ABILITIES = [
-      { key: 'STR', label: 'Strength' },
-      { key: 'DEX', label: 'Dexterity' },
-      { key: 'CON', label: 'Constitution' },
-      { key: 'INT', label: 'Intelligence' },
-      { key: 'WIS', label: 'Wisdom' },
-      { key: 'CHA', label: 'Charisma' },
-    ];
+  const SKILLS = [
+    { key: 'DEX', label: 'Acrobatics' },
+    { key: 'WIS', label: 'Animal Handling' },
+    { key: 'INT', label: 'Arcana' },
+    { key: 'STR', label: 'Athletics' },
+    { key: 'CHA', label: 'Deception' },
+    { key: 'INT', label: 'History' },
+    { key: 'WIS', label: 'Insight' },
+    { key: 'CHA', label: 'Intimidation' },
+    { key: 'INT', label: 'Investigation' },
+    { key: 'WIS', label: 'Medicine' },
+    { key: 'INT', label: 'Nature' },
+    { key: 'WIS', label: 'Perception' },
+    { key: 'CHA', label: 'Performance' },
+    { key: 'CHA', label: 'Persuasion' },
+    { key: 'INT', label: 'Religion' },
+    { key: 'DEX', label: 'Sleight of Hand' },
+    { key: 'DEX', label: 'Stealth' },
+    { key: 'WIS', label: 'Survival' },
+  ];
 
-    const SAVING_THROWS = [
-      { key: 'STR', label: 'Strength' },
-      { key: 'DEX', label: 'Dexterity' },
-      { key: 'CON', label: 'Constitution' },
-      { key: 'INT', label: 'Intelligence' },
-      { key: 'WIS', label: 'Wisdom' },
-      { key: 'CHA', label: 'Charisma' },
-    ];
+  const SPELL_LEVELS = [
+    { level: 0, label: 'Cantrips', slots: false, count: 8 },
+    { level: 1, slots: true, count: 12 },
+    { level: 2, slots: true, count: 8 },
+    { level: 3, slots: true, count: 8 },
+    { level: 4, slots: true, count: 8 },
+    { level: 5, slots: true, count: 6 },
+    { level: 6, slots: true, count: 6 },
+    { level: 7, slots: true, count: 6 },
+    { level: 8, slots: true, count: 6 },
+    { level: 9, slots: true, count: 6 },
+  ];
 
-    const SKILLS = [
-      { key: 'DEX', label: 'Acrobatics' },
-      { key: 'WIS', label: 'Animal Handling' },
-      { key: 'INT', label: 'Arcana' },
-      { key: 'STR', label: 'Athletics' },
-      { key: 'CHA', label: 'Deception' },
-      { key: 'INT', label: 'History' },
-      { key: 'WIS', label: 'Insight' },
-      { key: 'CHA', label: 'Intimidation' },
-      { key: 'INT', label: 'Investigation' },
-      { key: 'WIS', label: 'Medicine' },
-      { key: 'INT', label: 'Nature' },
-      { key: 'WIS', label: 'Perception' },
-      { key: 'CHA', label: 'Performance' },
-      { key: 'CHA', label: 'Persuasion' },
-      { key: 'INT', label: 'Religion' },
-      { key: 'DEX', label: 'Sleight of Hand' },
-      { key: 'DEX', label: 'Stealth' },
-      { key: 'WIS', label: 'Survival' },
-    ];
-
-    const SPELL_LEVELS = [
-      { level: 0, label: 'Cantrips', slots: false, count: 8 },
-      { level: 1, slots: true, count: 12 },
-      { level: 2, slots: true, count: 8 },
-      { level: 3, slots: true, count: 8 },
-      { level: 4, slots: true, count: 8 },
-      { level: 5, slots: true, count: 6 },
-      { level: 6, slots: true, count: 6 },
-      { level: 7, slots: true, count: 6 },
-      { level: 8, slots: true, count: 6 },
-      { level: 9, slots: true, count: 6 },
-    ];
-
-    // ── Populate ability score blocks ─────────────────────────
-    function buildAbilityCol(stats) {
-      const col = document.getElementById('ability-col');
-      col.innerHTML = '';
-      ABILITIES.forEach(a => {
-        const score = stats?.[a.key] ?? '—';
-        const modStr = (typeof score === 'number') ? mod(score) : '—';
-        col.innerHTML += `
+  // ── Populate ability score blocks ─────────────────────────
+  function buildAbilityCol(stats) {
+    const col = document.getElementById('ability-col');
+    col.innerHTML = '';
+    ABILITIES.forEach(a => {
+      const score = stats?.[a.key] ?? '—';
+      const modStr = (typeof score === 'number') ? mod(score) : '—';
+      col.innerHTML += `
           <div class="ability-block">
             <div class="ability-name">${a.label.toUpperCase()}</div>
             <div class="ability-score">${score}</div>
             <div class="ability-mod">${modStr}</div>
           </div>`;
-      });
-    }
+    });
+  }
 
-    // ── Populate saving throws ────────────────────────────────
-    function buildSavingThrows(stats, profBonus) {
-      const list = document.getElementById('saving-throws-list');
-      list.innerHTML = '';
-      SAVING_THROWS.forEach(s => {
-        const score = stats?.[s.key] ?? 10;
-        const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
-        const val = (bonus >= 0 ? '+' : '') + bonus;
-        list.innerHTML += `
+  // ── Populate saving throws ────────────────────────────────
+  function buildSavingThrows(stats, profBonus) {
+    const list = document.getElementById('saving-throws-list');
+    list.innerHTML = '';
+    SAVING_THROWS.forEach(s => {
+      const score = stats?.[s.key] ?? 10;
+      const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
+      const val = (bonus >= 0 ? '+' : '') + bonus;
+      list.innerHTML += `
           <div class="check-item">
             <div class="check-dot"></div>
             <span class="check-val">${val}</span>
             <span class="check-name">${s.label}</span>
           </div>`;
-      });
-    }
+    });
+  }
 
-    // ── Populate skills ───────────────────────────────────────
-    function buildSkills(stats) {
-      const list = document.getElementById('skills-list');
-      list.innerHTML = '';
-      SKILLS.forEach(s => {
-        const score = stats?.[s.key] ?? 10;
-        const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
-        const val = (bonus >= 0 ? '+' : '') + bonus;
-        list.innerHTML += `
+  // ── Populate skills ───────────────────────────────────────
+  function buildSkills(stats) {
+    const list = document.getElementById('skills-list');
+    list.innerHTML = '';
+    SKILLS.forEach(s => {
+      const score = stats?.[s.key] ?? 10;
+      const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
+      const val = (bonus >= 0 ? '+' : '') + bonus;
+      list.innerHTML += `
           <div class="check-item">
             <div class="check-dot"></div>
             <span class="check-val">${val}</span>
             <span class="check-name">${s.label} <em>(${s.key})</em></span>
           </div>`;
-      });
-    }
+    });
+  }
 
-    // ── Populate attacks ──────────────────────────────────────
-    function buildAttacks(attacks) {
-      const list = document.getElementById('attacks-list');
-      list.innerHTML = '';
-      const rows = attacks ?? [{}, {}, {}];
-      rows.slice(0, 5).forEach(a => {
-        list.innerHTML += `
+  // ── Populate attacks ──────────────────────────────────────
+  function buildAttacks(attacks) {
+    const list = document.getElementById('attacks-list');
+    list.innerHTML = '';
+    const rows = attacks ?? [{}, {}, {}];
+    rows.slice(0, 5).forEach(a => {
+      list.innerHTML += `
           <div class="attack-row">
             <div class="attack-cell">${a.name ?? ''}</div>
             <div class="attack-cell">${a.atkBonus ?? ''}</div>
             <div class="attack-cell">${a.damage ?? ''}</div>
           </div>`;
-      });
-      // Fill remaining empty rows
-      for (let i = rows.length; i < 6; i++) {
-        list.innerHTML += `
+    });
+    // Fill remaining empty rows
+    for (let i = rows.length; i < 6; i++) {
+      list.innerHTML += `
           <div class="attack-row">
             <div class="attack-cell"></div>
             <div class="attack-cell"></div>
             <div class="attack-cell"></div>
           </div>`;
-      }
     }
+  }
 
-    // ── Populate spell levels ─────────────────────────────────
-    function buildSpells(spells) {
-      const body = document.getElementById('spell-body');
-      body.innerHTML = '';
-      SPELL_LEVELS.forEach(sl => {
-        const spellList = spells?.[sl.level] ?? [];
-        let slotsHtml = '';
-        if (sl.slots) {
-          slotsHtml = `
+  // ── Populate spell levels ─────────────────────────────────
+  function buildSpells(spells) {
+    const body = document.getElementById('spell-body');
+    body.innerHTML = '';
+    SPELL_LEVELS.forEach(sl => {
+      const spellList = spells?.[sl.level] ?? [];
+      let slotsHtml = '';
+      if (sl.slots) {
+        slotsHtml = `
             <div class="spell-slots">
               <div class="spell-slots-group">
                 <div class="spell-slots-label">Slots Total</div>
@@ -1022,19 +1017,19 @@
                 <div class="spell-slots-val">—</div>
               </div>
             </div>`;
-        }
+      }
 
-        let linesHtml = '';
-        for (let i = 0; i < sl.count; i++) {
-          const name = spellList[i] ?? '';
-          linesHtml += `
+      let linesHtml = '';
+      for (let i = 0; i < sl.count; i++) {
+        const name = spellList[i] ?? '';
+        linesHtml += `
             <div class="spell-line">
               ${sl.slots ? '<div class="spell-dot"></div>' : ''}
               <div class="spell-name">${name}</div>
             </div>`;
-        }
+      }
 
-        body.innerHTML += `
+      body.innerHTML += `
           <div class="spell-level-block">
             <div class="spell-level-header">
               <div class="spell-level-num">${sl.level}</div>
@@ -1043,136 +1038,135 @@
             </div>
             ${linesHtml}
           </div>`;
-      });
-    }
-
-    function renderClassAbilities(sheetData, abilities) {
-      if (!Array.isArray(abilities) || abilities.length === 0) {
-        return;
-      }
-
-      const abilitySummary = abilities
-        .map(ability => ability.desc ? `${ability.name}: ${ability.desc}` : ability.name)
-        .join(' | ');
-
-      const featureText = [sheetData.featuresTraits, abilitySummary].filter(Boolean).join(' | ');
-      const backgroundFeatureText = [sheetData.additionalFeatures, abilitySummary].filter(Boolean).join(' | ');
-
-      set('features-traits', featureText || '—');
-      set('bg-features', backgroundFeatureText || featureText || '—');
-    }
-
-    async function loadClassAbilities(sheetData) {
-      const classId = Number(sheetData?.classId);
-      if (!Number.isInteger(classId) || classId < 0) {
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/character/abilities?class_id=${classId}`);
-        if (!response.ok) {
-          return;
-        }
-
-        const abilities = await response.json();
-        renderClassAbilities(sheetData, abilities);
-      } catch (err) {
-        console.warn('Could not load class abilities for sheet:', err);
-      }
-    }
-
-    // ── Main populate function ────────────────────────────────
-    function populateSheet(s) {
-      if (!s) {
-        // No data — show placeholders
-        buildAbilityCol(null);
-        buildSavingThrows(null);
-        buildSkills(null);
-        buildAttacks(null);
-        buildSpells(null);
-        return;
-      }
-
-      const stats = s.stats ?? {};
-
-      // Header
-      set('hdr-name',       s.name ?? '—');
-      set('hdr-class',      s.class ? `${s.class} 1` : '—');
-      set('hdr-background', s.background ?? '—');
-      set('hdr-player',     s.playerName ?? '—');
-      set('hdr-race',       s.race ?? '—');
-      set('hdr-alignment',  s.alignment ?? '—');
-      set('hdr-xp',         s.xp ?? '0');
-
-      // Combat stats
-      set('stat-ac',          s.armorClass ?? (10 + Math.floor(((stats.DEX ?? 10) - 10) / 2)));
-      set('stat-initiative',  mod(stats.DEX ?? 10));
-      set('stat-speed',       s.speed ?? '30');
-      set('stat-hp-max',      s.stats?.charhealth ?? '—');
-      set('stat-hit-dice',    s.hitDice ?? '1d8');
-      set('stat-proficiency', '+2');
-
-      // Passive wisdom
-      const wisBonus = Math.floor(((stats.WIS ?? 10) - 10) / 2);
-      set('stat-passive', 10 + wisBonus);
-
-      // Traits
-      set('trait-personality', s.personalityTraits ?? '—');
-      set('trait-ideals',      s.ideals ?? '—');
-      set('trait-bonds',       s.bonds ?? '—');
-      set('trait-flaws',       s.flaws ?? '—');
-      set('features-traits',   s.featuresTraits ?? '—');
-      set('other-proficiencies', s.proficiencies ?? 'Common');
-      set('equipment-content', s.equipment ?? '—');
-
-      // Ability scores
-      buildAbilityCol(stats);
-      buildSavingThrows(stats);
-      buildSkills(stats);
-      buildAttacks(s.attacks);
-
-      // Background tab
-      set('bg-age',       s.age ?? '—');
-      set('bg-height',    s.height ?? '—');
-      set('bg-weight',    s.weight ?? '—');
-      set('bg-eyes',      s.eyes ?? '—');
-      set('bg-skin',      s.skin ?? '—');
-      set('bg-hair',      s.hair ?? '—');
-      set('bg-appearance', s.appearance ?? '—');
-      set('bg-backstory',  s.backstory ?? '—');
-      set('bg-allies',     s.allies ?? '—');
-      set('bg-features',   s.additionalFeatures ?? '—');
-      set('bg-treasure',   s.treasure ?? '—');
-
-      // Spellcasting tab
-      const spellcastingClasses = ['Cleric', 'Sorcerer', 'Wizard'];
-      const isSpellcaster = spellcastingClasses.includes(s.class);
-      set('spell-class',     isSpellcaster ? s.class : '—');
-      set('spell-ability',   isSpellcaster ? (s.class === 'Wizard' ? 'INT' : s.class === 'Cleric' ? 'WIS' : 'CHA') : '—');
-      set('spell-save-dc',   isSpellcaster ? (8 + 2 + Math.floor(((stats.INT ?? 10) - 10) / 2)) : '—');
-      set('spell-atk-bonus', isSpellcaster ? mod(stats.INT ?? 10) : '—');
-      buildSpells(s.spells);
-    }
-
-    populateSheet(sheet);
-    loadClassAbilities(sheet);
-
-    // ── Tab switching ─────────────────────────────────────────
-    document.querySelectorAll('.sheet-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
-      });
     });
+  }
 
-    // ── Logout ────────────────────────────────────────────────
-    document.getElementById('logout-link').addEventListener('click', (e) => {
-      e.preventDefault();
-      sessionStorage.removeItem('bearerToken');
-      window.location.href = 'login.html';
+  function renderClassAbilities(sheetData, abilities) {
+    if (!Array.isArray(abilities) || abilities.length === 0) {
+      return;
+    }
+
+    const abilitySummary = abilities
+            .map(ability => ability.desc ? `${ability.name}: ${ability.desc}` : ability.name)
+            .join(' | ');
+
+    const featureText = [sheetData.featuresTraits, abilitySummary].filter(Boolean).join(' | ');
+    const backgroundFeatureText = [sheetData.additionalFeatures, abilitySummary].filter(Boolean).join(' | ');
+
+    set('features-traits', featureText || '—');
+    set('bg-features', backgroundFeatureText || featureText || '—');
+  }
+
+  async function loadClassAbilities(sheetData) {
+    const classId = Number(sheetData?.classId);
+    if (!Number.isInteger(classId) || classId < 0) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/character/abilities?class_id=${classId}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const abilities = await response.json();
+      renderClassAbilities(sheetData, abilities);
+    } catch (err) {
+      console.warn('Could not load class abilities for sheet:', err);
+    }
+  }
+
+  // ── Main populate function ────────────────────────────────
+  function populateSheet(s) {
+    if (!s) {
+      // No data — show placeholders
+      buildAbilityCol(null);
+      buildSavingThrows(null);
+      buildSkills(null);
+      buildAttacks(null);
+      buildSpells(null);
+      return;
+    }
+
+    const stats = s.stats ?? {};
+
+    // Header
+    set('hdr-name',       s.name ?? '—');
+    set('hdr-class',      s.class ? `${s.class} 1` : '—');
+    set('hdr-background', s.background ?? '—');
+    set('hdr-player',     s.playerName ?? '—');
+    set('hdr-race',       s.race ?? '—');
+    set('hdr-alignment',  s.alignment ?? '—');
+    set('hdr-xp',         s.xp ?? '0');
+
+    // Combat stats
+    set('stat-ac',          s.armorClass ?? (10 + Math.floor(((stats.DEX ?? 10) - 10) / 2)));
+    set('stat-initiative',  mod(stats.DEX ?? 10));
+    set('stat-speed',       s.speed ?? '30');
+    set('stat-hp-max',      s.stats?.charhealth ?? '—');
+    set('stat-hit-dice',    s.hitDice ?? '1d8');
+    set('stat-proficiency', '+2');
+
+    // Passive wisdom
+    const wisBonus = Math.floor(((stats.WIS ?? 10) - 10) / 2);
+    set('stat-passive', 10 + wisBonus);
+
+    // Traits
+    set('trait-personality', s.personalityTraits ?? '—');
+    set('trait-ideals',      s.ideals ?? '—');
+    set('trait-bonds',       s.bonds ?? '—');
+    set('trait-flaws',       s.flaws ?? '—');
+    set('features-traits',   s.featuresTraits ?? '—');
+    set('other-proficiencies', s.proficiencies ?? 'Common');
+    set('equipment-content', s.equipment ?? '—');
+
+    // Ability scores
+    buildAbilityCol(stats);
+    buildSavingThrows(stats);
+    buildSkills(stats);
+    buildAttacks(s.attacks);
+
+    // Background tab
+    set('bg-age',       s.age ?? '—');
+    set('bg-height',    s.height ?? '—');
+    set('bg-weight',    s.weight ?? '—');
+    set('bg-eyes',      s.eyes ?? '—');
+    set('bg-skin',      s.skin ?? '—');
+    set('bg-hair',      s.hair ?? '—');
+    set('bg-appearance', s.appearance ?? '—');
+    set('bg-backstory',  s.backstory ?? '—');
+    set('bg-allies',     s.allies ?? '—');
+    set('bg-features',   s.additionalFeatures ?? '—');
+    set('bg-treasure',   s.treasure ?? '—');
+
+    // Spellcasting tab
+    const spellcastingClasses = ['Cleric', 'Sorcerer', 'Wizard'];
+    const isSpellcaster = spellcastingClasses.includes(s.class);
+    set('spell-class',     isSpellcaster ? s.class : '—');
+    set('spell-ability',   isSpellcaster ? (s.class === 'Wizard' ? 'INT' : s.class === 'Cleric' ? 'WIS' : 'CHA') : '—');
+    set('spell-save-dc',   isSpellcaster ? (8 + 2 + Math.floor(((stats.INT ?? 10) - 10) / 2)) : '—');
+    set('spell-atk-bonus', isSpellcaster ? mod(stats.INT ?? 10) : '—');
+    buildSpells(s.spells);
+  }
+
+  populateSheet(sheet);
+  loadClassAbilities(sheet);
+
+  // ── Tab switching ─────────────────────────────────────────
+  document.querySelectorAll('.sheet-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
     });
-  </script>
+  });
+
+  // ── Logout ────────────────────────────────────────────────
+  document.getElementById('logout-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = '/auth/login';
+  });
+</script>
 </body>
 </html>
