@@ -195,6 +195,7 @@
   <a href="/premade" class="nav-brand">⚔ Middle-earth Sheets</a>
   <div class="nav-links">
     <a href="/character/create" class="active">Create Character</a>
+    <a href="/my-characters">My Characters</a>
     <a href="/premade">Premade Characters</a>
     <a href="#" id="logout-link">Log Out</a>
   </div>
@@ -415,6 +416,24 @@
           raceModifiers: sheet.raceModifiers,
           stats: mappedStats,
         };
+
+        // Save to database so it persists for this user
+        try {
+          await fetch(`${API_BASE}/character/sheets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: charName || '—',
+              className: sheet.className,
+              raceName: sheet.raceName,
+              classDescription: sheet.classDescription || '',
+              raceModifiers: sheet.raceModifiers || '',
+              stats: sheet.stats,
+            }),
+          });
+        } catch (saveErr) {
+          console.warn('Could not save character to database:', saveErr);
+        }
 
         sessionStorage.setItem('currentSheet', JSON.stringify(sheetData));
         window.location.href = '/character/sheet';
