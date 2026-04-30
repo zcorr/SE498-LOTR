@@ -18,6 +18,7 @@ builder.Services.AddHttpClient<ILotrApiClient, LotrApiClient>(client =>
 
 // Register auth service
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICharacterSheetService, CharacterSheetService>();
 
 // Configure JWT authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"];

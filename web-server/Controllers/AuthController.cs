@@ -39,6 +39,18 @@ public class AuthController : Controller
             return StatusCode(500, $"Error serving login page: {ex.Message}");
         }
     }
+    
+    [AllowAnonymous]
+    public IActionResult Register()
+    {
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "frontend", "register.html");
+        if (!System.IO.File.Exists(filePath))
+        {
+            return NotFound("Registration page not found");
+        }
+        return PhysicalFile(filePath, "text/html");
+    }
+    
 }
 
 // Separate API controller for authentication endpoints
