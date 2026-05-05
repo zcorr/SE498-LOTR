@@ -6,6 +6,7 @@ public interface ILotrApiClient
 {
     Task<bool> IsHealthyAsync();
     Task<ClassDTO?> GetClassAsync(int id, string bearerToken);
+    Task<List<ClassDTO>> GetClassesAsync(string bearerToken);
     Task<List<StatDTO>> GetStatsAsync(string bearerToken);
     Task<List<RaceDTO>> GetRacesAsync(string bearerToken);
     Task<List<AbilityDTO>> GetAbilitiesAsync(string bearerToken, int? classId = null);

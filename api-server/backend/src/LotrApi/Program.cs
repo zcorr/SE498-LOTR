@@ -254,6 +254,36 @@ app.MapGet("/race", async (NpgsqlDataSource ds) =>
     .WithTags("Game data")
     .WithSummary("All races.");
 
+app.MapGet("/class", async (NpgsqlDataSource ds) =>
+{
+    await using var conn = await ds.OpenConnectionAsync();
+    await using var cmd = new NpgsqlCommand(
+        """
+        SELECT id, name, description, racial_ids
+        FROM classes 
+        ORDER BY id
+        """,
+        conn);
+    await using var reader = await cmd.ExecuteReaderAsync();
+    var list = new List<object>();
+    while (await reader.ReadAsync())
+    {
+        list.Add(new
+        {
+            id = reader.GetInt32(0),
+            name = reader.GetString(1),
+            desc = reader.IsDBNull(2) ? "" : reader.GetString(2),
+            racialids = reader.GetFieldValue<int[]>(3),
+        });
+    }
+    
+    return Results.Json(list, jsonOptions);
+    
+})
+
+.WithTags("Game data")
+.WithSummary("All classes (id, name, description, racialids).");
+    
 app.MapGet("/premades", async (NpgsqlDataSource ds) =>
 {
     await using var conn = await ds.OpenConnectionAsync();

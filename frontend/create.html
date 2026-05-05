@@ -292,28 +292,28 @@
     // ── Populate dropdowns from API ───────────────────────────
     async function loadDropdowns() {
       try {
-        // TODO: GET /class and GET /race — endpoints not yet implemented
-        // Placeholder options until API is ready
+        const [classRes, raceRes] = await Promise.all([
+          fetch('/api/character/class', { credentials: 'include' }),
+          fetch('/api/character/races', { credentials: 'include' }),
+        ]);
 
-        const classes = ['Barbarian', 'Cleric', 'Rogue', 'Sorcerer', 'Wizard'];
-        const races   = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Orc'];
+        const classes = await classRes.json();
+        const races   = await raceRes.json();
 
         const classSelect = document.getElementById('class-select');
         const raceSelect  = document.getElementById('race-select');
 
         classes.forEach(c => {
           const opt = document.createElement('option');
-          opt.value = c.toLowerCase();
-          opt.textContent = c;
+          opt.value = c.id;
+          opt.textContent = c.name;
           classSelect.appendChild(opt);
         });
 
-
         races.forEach(r => {
           const opt = document.createElement('option');
-          opt.value = r.toLowerCase();
-          opt.textContent = r;
-
+          opt.value = r.id;
+          opt.textContent = r.name;
           raceSelect.appendChild(opt);
         });
 
