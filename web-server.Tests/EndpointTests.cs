@@ -13,6 +13,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -615,5 +616,132 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
         var response = await client.GetAsync("/api/gamedata/race");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+}
+
+// =============================================================================
+// PREMADE SHAPE FACTORY
+// Separate factory so we can seed specific premade data without affecting
+// the shared LotrWebAppFactory used by EndpointTests.
+// =============================================================================
+public class PremadeShapeFactory : WebApplicationFactory<Program>
+{
+    public Mock<ILotrApiClient> MockApiClient { get; } = new();
+    public Mock<IAuthService> MockAuthService { get; } = new();
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureServices(services =>
+        {
+            var apiDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(ILotrApiClient));
+            if (apiDescriptor != null)
+                services.Remove(apiDescriptor);
+
+            var httpDescriptors = services
+                .Where(d => d.ServiceType == typeof(IHttpClientFactory)
+                         || (d.ImplementationType != null
+                             && d.ImplementationType == typeof(LotrApiClient)))
+                .ToList();
+            foreach (var d in httpDescriptors)
+                services.Remove(d);
+
+            var authDescriptors = services
+                .Where(d => d.ServiceType == typeof(IAuthService))
+                .ToList();
+            foreach (var d in authDescriptors)
+                services.Remove(d);
+
+            services.AddSingleton<ILotrApiClient>(MockApiClient.Object);
+            services.AddScoped<IAuthService>(_ => MockAuthService.Object);
+
+            MockAuthService
+                .Setup(x => x.SeedDefaultUserAsync())
+                .Returns(Task.CompletedTask);
+            MockAuthService
+                .Setup(x => x.ValidateToken(It.IsAny<string>()))
+                .Returns(true);
+
+            var statsElement = JsonSerializer.Deserialize<JsonElement>("{\"STR\":16,\"DEX\":14}");
+
+            MockApiClient
+                .Setup(x => x.GetPremadesAsync(It.IsAny<string>()))
+                .ReturnsAsync(new List<PremadeDTO>
+                {
+                    new() { Id = 1, Name = "Aragorn", Class_id = 1, Race_id = 1, Stats = statsElement },
+                    new() { Id = 2, Name = "Gandalf", Class_id = 2, Race_id = 2, Stats = statsElement },
+                    new() { Id = 3, Name = "Legolas", Class_id = 3, Race_id = 3, Stats = statsElement },
+                });
+        });
+    }
+}
+
+// =============================================================================
+// PREMADE SHAPE TESTS
+// Verifies that GET /api/premade/list returns the JSON fields the frontend needs.
+// Asserts on the raw HTTP response body (not a constructed DTO) to test exactly
+// what the browser receives, and to avoid JsonElement construction complexity.
+// =============================================================================
+public class PremadeShapeTests : IClassFixture<PremadeShapeFactory>
+{
+    private readonly PremadeShapeFactory _factory;
+
+    public PremadeShapeTests(PremadeShapeFactory factory)
+    {
+        _factory = factory;
+    }
+
+    private static string GenerateTestToken()
+    {
+        var key = Encoding.ASCII.GetBytes(
+            "Cool_Mega_Secret_Key_For_JWT_Token_Generation");
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testuser"),
+                new Claim(ClaimTypes.Name, "testuser"),
+            }),
+            Expires = DateTime.UtcNow.AddHours(1),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature),
+        };
+        return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
+    }
+
+    private HttpClient CreateAuthenticatedClient()
+    {
+        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+        });
+        client.DefaultRequestHeaders.Add("Cookie", $"AuthToken={GenerateTestToken()}");
+        return client;
+    }
+
+    [Fact]
+    public async Task GetPremades_WithAuth_ReturnsCorrectShape()
+    {
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.GetAsync("/api/premade/list");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        var arr = doc.RootElement;
+
+        Assert.Equal(JsonValueKind.Array, arr.ValueKind);
+        Assert.Equal(3, arr.GetArrayLength());
+
+        var first = arr[0];
+        Assert.True(first.TryGetProperty("id", out _),      "missing 'id'");
+        Assert.True(first.TryGetProperty("name", out _),    "missing 'name'");
+        Assert.True(first.TryGetProperty("class_id", out _),"missing 'class_id'");
+        Assert.True(first.TryGetProperty("race_id", out _), "missing 'race_id'");
+        Assert.True(first.TryGetProperty("stats", out _),   "missing 'stats'");
     }
 }
