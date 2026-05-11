@@ -239,16 +239,9 @@
     <input type="text" id="search-input" class="search-input" placeholder="🔍  Search characters…" />
   </div>
 
-  <!-- Filters -->
-  <div class="filter-bar">
-    <span class="filter-label">Class:</span>
-    <button class="filter-pill active" data-filter-type="class" data-filter-value="">All</button>
-    <button class="filter-pill" data-filter-type="class" data-filter-value="barbarian">Barbarian</button>
-    <button class="filter-pill" data-filter-type="class" data-filter-value="cleric">Cleric</button>
-    <button class="filter-pill" data-filter-type="class" data-filter-value="rogue">Rogue</button>
-    <button class="filter-pill" data-filter-type="class" data-filter-value="sorcerer">Sorcerer</button>
-    <button class="filter-pill" data-filter-type="class" data-filter-value="wizard">Wizard</button>
-  </div>
+  <!-- Filters — populated dynamically by JS from /api/character/classes and /api/character/races -->
+  <div class="filter-bar" id="class-filter-bar"></div>
+  <div class="filter-bar" id="race-filter-bar"></div>
 
   <!-- Status / results -->
   <div id="status-msg">Loading characters…</div>
@@ -257,72 +250,78 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script>
-  // ── Auth guard ────────────────────────────────────────────
-  // TODO: re-enable before going live
-  // if (!sessionStorage.getItem('bearerToken')) {
-  //   window.location.href = '/auth/login';
-  // }
-
   // ── Config ────────────────────────────────────────────────
-  // TODO: update base URL once Web Server / API Server is running
   const API_BASE = 'http://localhost:5292/api';
+
+  // ── XSS escape ────────────────────────────────────────────
+  const esc = s => String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 
   // ── State ─────────────────────────────────────────────────
   let allCharacters = [];
-  let activeClassFilter = '';
+  let classMap = {};  // { id: name }
+  let raceMap  = {};  // { id: name }
+  let activeClassId = null;  // null = "All"
+  let activeRaceId  = null;  // null = "All"
+  let searchQuery   = '';
 
-  // ── Fetch premades ─────────────────────────────────────────
-  async function fetchPremades() {
-    try {
-      // TODO: GET /premades — endpoint not yet implemented
-      // Using placeholder data until API is ready
-      const response = await fetch(`${API_BASE}/premade/list`, { headers: {'Content-Type': 'application/json'} });
-      if (response.ok) {
-        allCharacters = await response.json();
-      } else {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (err) {
-      console.warn('Could not load premades from API, using placeholder data:', err);
-      // Placeholder data matching the premades DB table structure
-      allCharacters = [
-        { id: 1, name: 'Aragorn', class: 'Rogue', race: 'Human',
-          stats: { STR: 16, DEX: 14, CON: 14, INT: 13, WIS: 12, CHA: 15 } },
-        { id: 2, name: 'Gandalf', class: 'Wizard', race: 'Maia',
-          stats: { STR: 10, DEX: 11, CON: 12, INT: 20, WIS: 18, CHA: 17 } },
-        { id: 3, name: 'Legolas', class: 'Rogue', race: 'Elf',
-          stats: { STR: 13, DEX: 20, CON: 12, INT: 14, WIS: 15, CHA: 13 } },
-        { id: 4, name: 'Gimli', class: 'Barbarian', race: 'Dwarf',
-          stats: { STR: 18, DEX: 10, CON: 18, INT: 11, WIS: 12, CHA: 9 } },
-        { id: 5, name: 'Frodo Baggins', class: 'Rogue', race: 'Hobbit',
-          stats: { STR: 8, DEX: 16, CON: 12, INT: 13, WIS: 14, CHA: 14 } },
-        { id: 6, name: 'Saruman', class: 'Sorcerer', race: 'Maia',
-          stats: { STR: 10, DEX: 12, CON: 13, INT: 19, WIS: 15, CHA: 18 } },
-        { id: 7, name: 'Éowyn', class: 'Barbarian', race: 'Human',
-          stats: { STR: 14, DEX: 15, CON: 13, INT: 12, WIS: 11, CHA: 14 } },
-        { id: 8, name: 'Boromir', class: 'Barbarian', race: 'Human',
-          stats: { STR: 18, DEX: 13, CON: 16, INT: 13, WIS: 11, CHA: 14 } },
-        { id: 9, name: 'Galadriel', class: 'Cleric', race: 'Elf',
-          stats: { STR: 10, DEX: 14, CON: 12, INT: 18, WIS: 20, CHA: 20 } },
-      ];
+  // ── Build filter pills ────────────────────────────────────
+  // Renders an "All" pill + one pill per item into containerId.
+  // Calls setActive(id|null) then re-renders on each click.
+  // If items is empty the container stays blank (no orphaned label).
+  function buildPills(containerId, items, label, setActive) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    if (items.length === 0) return;
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'filter-label';
+    labelSpan.textContent = label;
+    container.appendChild(labelSpan);
+
+    function activatePill(targetPill) {
+      container.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      targetPill.classList.add('active');
     }
-    renderCards();
+
+    const allPill = document.createElement('button');
+    allPill.className = 'filter-pill active';
+    allPill.textContent = 'All';
+    allPill.addEventListener('click', () => {
+      setActive(null);
+      activatePill(allPill);
+      renderCards();
+    });
+    container.appendChild(allPill);
+
+    items.forEach(item => {
+      const pill = document.createElement('button');
+      pill.className = 'filter-pill';
+      pill.textContent = item.name ?? 'Unknown';
+      pill.addEventListener('click', () => {
+        setActive(item.id);
+        activatePill(pill);
+        renderCards();
+      });
+      container.appendChild(pill);
+    });
   }
 
   // ── Render cards ──────────────────────────────────────────
+  // TODO(SCRUM-XX): add JS filter tests (Jest/Playwright) for search-only,
+  // class-only, race-only, combined, and empty results scenarios.
   function renderCards() {
-    const query  = document.getElementById('search-input').value.toLowerCase().trim();
     const grid   = document.getElementById('card-grid');
     const status = document.getElementById('status-msg');
 
-    let filtered = allCharacters.filter(c => {
-      const matchSearch = !query ||
-              c.name.toLowerCase().includes(query) ||
-              c.class.toLowerCase().includes(query) ||
-              c.race.toLowerCase().includes(query);
-      const matchClass = !activeClassFilter ||
-              c.class.toLowerCase() === activeClassFilter;
-      return matchSearch && matchClass;
+    const filtered = allCharacters.filter(c => {
+      const matchSearch = !searchQuery || (c.name ?? '').toLowerCase().includes(searchQuery);
+      const matchClass  = activeClassId === null || c.class_id === activeClassId;
+      const matchRace   = activeRaceId  === null || c.race_id  === activeRaceId;
+      return matchSearch && matchClass && matchRace;
     });
 
     grid.innerHTML = '';
@@ -331,26 +330,28 @@
       grid.innerHTML = '<div class="no-results">No characters found matching your search.</div>';
     } else {
       filtered.forEach(c => {
-        const stats = c.stats || {};
+        const stats     = c.stats || {};
+        const className = classMap[c.class_id] ?? 'Unknown';
+        const raceName  = raceMap[c.race_id]   ?? 'Unknown';
         const card = document.createElement('div');
         card.className = 'char-card';
         card.innerHTML = `
-            <div class="char-name">${c.name}</div>
-            <div class="char-meta">${c.class} · ${c.race}</div>
-            <div class="stat-row">
-              ${Object.entries(stats).map(([k, v]) =>
-                `<span class="stat-badge"><strong>${k}</strong> ${v}</span>`
-        ).join('')}
-            </div>
-            <button class="view-btn">View Sheet</button>
-          `;
+          <div class="char-name">${esc(c.name)}</div>
+          <div class="char-meta">${esc(className)} · ${esc(raceName)}</div>
+          <div class="stat-row">
+            ${Object.entries(stats).map(([k, v]) =>
+              `<span class="stat-badge"><strong>${esc(k)}</strong> ${esc(v)}</span>`
+            ).join('')}
+          </div>
+          <button class="view-btn">View Sheet</button>
+        `;
         card.querySelector('.view-btn').addEventListener('click', () => selectCharacter(c));
         grid.appendChild(card);
       });
     }
 
     status.style.display = 'none';
-    grid.style.display = 'grid';
+    grid.style.display   = 'grid';
   }
 
   // ── Select character → go to sheet ───────────────────────
@@ -359,27 +360,66 @@
     window.location.href = '/character/sheet';
   }
 
-  // ── Search input ──────────────────────────────────────────
-  document.getElementById('search-input').addEventListener('input', renderCards);
+  // ── Init ──────────────────────────────────────────────────
+  async function init() {
+    const status = document.getElementById('status-msg');
+    const grid   = document.getElementById('card-grid');
 
-  // ── Filter pills ──────────────────────────────────────────
-  document.querySelectorAll('.filter-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      document.querySelectorAll('.filter-pill[data-filter-type="class"]').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      activeClassFilter = pill.dataset.filterValue;
-      renderCards();
-    });
+    status.textContent    = 'Loading characters…';
+    status.style.display  = 'block';
+    status.style.color    = '';
+    grid.style.display    = 'none';
+
+    // Premades are required — show error and stop if unavailable.
+    try {
+      // SCRUM-49: When /api/premade/list supports query params, replace the line below with:
+      // const params = new URLSearchParams();
+      // if (searchQuery) params.set('q', searchQuery);
+      // if (activeClassId !== null) params.set('class_id', activeClassId);
+      // if (activeRaceId  !== null) params.set('race_id',  activeRaceId);
+      // const res = await fetch(`${API_BASE}/premade/list?${params}`);
+      // Then move this fetch call into renderCards() so it re-fetches on each filter change.
+      const res = await fetch(`${API_BASE}/premade/list`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      allCharacters = await res.json();
+    } catch (err) {
+      console.error('Failed to load premades:', err);
+      status.textContent = 'Could not load characters. Please try again later.';
+      status.style.color = 'var(--lotr-error)';
+      return;
+    }
+
+    // Classes and races degrade gracefully — a failed fetch just omits that filter row.
+    const [classResult, raceResult] = await Promise.allSettled([
+      fetch(`${API_BASE}/character/classes`).then(r => r.ok ? r.json() : Promise.reject(r.status)),
+      fetch(`${API_BASE}/character/races`).then(r   => r.ok ? r.json() : Promise.reject(r.status)),
+    ]);
+
+    const classes = classResult.status === 'fulfilled' ? classResult.value : [];
+    const races   = raceResult.status  === 'fulfilled' ? raceResult.value  : [];
+
+    classes.forEach(c => { classMap[c.id] = c.name; });
+    races.forEach(r   => { raceMap[r.id]  = r.name; });
+
+    buildPills('class-filter-bar', classes, 'Class:', v => { activeClassId = v; });
+    buildPills('race-filter-bar',  races,   'Race:',  v => { activeRaceId  = v; });
+
+    renderCards();
+  }
+
+  // ── Search input ──────────────────────────────────────────
+  document.getElementById('search-input').addEventListener('input', e => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    renderCards();
   });
 
   // ── Logout ────────────────────────────────────────────────
-  document.getElementById('logout-link').addEventListener('click', (e) => {
+  document.getElementById('logout-link').addEventListener('click', e => {
     e.preventDefault();
     window.location.href = '/auth/login';
   });
 
-  // ── Init ──────────────────────────────────────────────────
-  fetchPremades();
+  init();
 </script>
 </body>
 </html>
