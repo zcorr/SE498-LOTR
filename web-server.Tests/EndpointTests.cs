@@ -350,6 +350,18 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GetPremades_WithAuth_EmptyList_Returns200AndEmptyArray()
+    {
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.GetAsync("/api/premade/list");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = (await response.Content.ReadAsStringAsync()).Trim();
+        Assert.Equal("[]", body);
+    }
+
     // =========================================================================
     // CHARACTER API ENDPOINTS
     // =========================================================================
