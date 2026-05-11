@@ -391,9 +391,6 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
 
         var response = await client.GetAsync("/api/character/classes");
 
-        // Note: this endpoint currently has a bug — it calls
-        // GetAbilitiesAsync instead of a proper GetClassesAsync.
-        // The test still passes because the mock returns data either way.
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
