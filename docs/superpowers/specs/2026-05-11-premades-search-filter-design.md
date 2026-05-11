@@ -24,13 +24,20 @@ Client-side filtering using integer IDs now. Structured so the switch to server-
 
 ## Architecture & Data Flow
 
-On page load, three fetches run in parallel via `Promise.all`:
+On page load, three fetches run via two separate `Promise.all` groups — premades are required; classes and races degrade gracefully:
 
-| Fetch | Endpoint | Used for |
+```
+Step 1 — required: fetch premades (fail hard if this fails → error state)
+Step 2 — optional: Promise.all([fetchClasses, fetchRaces])
+         If either fails, that filter row is simply omitted from the UI.
+         Cards still render using classMap[id] ?? 'Unknown' and raceMap[id] ?? 'Unknown'.
+```
+
+| Fetch | Endpoint | Failure behaviour |
 |---|---|---|
-| Premades | `GET /api/premade/list` | Card data |
-| Classes | `GET /api/character/classes` | Class pills + card display |
-| Races | `GET /api/character/races` | Race pills + card display |
+| Premades | `GET /api/premade/list` | Show error state, stop |
+| Classes | `GET /api/character/classes` | Omit class filter row, show cards |
+| Races | `GET /api/character/races` | Omit race filter row, show cards |
 
 Two lookup maps are built from the results:
 - `classMap`: `{ id → name }` — used to resolve `class_id` to a display name on each card
@@ -43,13 +50,22 @@ Filter state:
 
 All filtering is done in-memory in `renderCards()`. No extra network calls per keystroke or pill click.
 
+### URL convention
+
+All three fetches use the existing hardcoded `API_BASE = 'http://localhost:5292/api'`:
+- `${API_BASE}/premade/list`
+- `${API_BASE}/character/classes`
+- `${API_BASE}/character/races`
+
+This matches the existing pattern in the file and avoids mixing relative and absolute URLs.
+
 ---
 
 ## Frontend Changes (`frontend/premades.html`)
 
 ### HTML
 
-Remove all hardcoded class filter pills. Replace with two empty containers:
+Remove all hardcoded class filter pills and their `.filter-label` span. Replace with two empty containers:
 
 ```html
 <div class="filter-bar" id="class-filter-bar"></div>
@@ -58,9 +74,9 @@ Remove all hardcoded class filter pills. Replace with two empty containers:
 
 ### JavaScript
 
-**`init()`** — replaces `fetchPremades()`. Runs three fetches in `Promise.all`. On failure, shows error state. On success, builds lookup maps and pills, then calls `renderCards()`.
+**`init()`** — replaces `fetchPremades()`. Fetches premades first; on failure shows error state and stops. Then fetches classes and races in `Promise.allSettled` so a failure in either only omits that filter row rather than breaking the page. Builds lookup maps and pills, then calls `renderCards()`.
 
-**`buildPills(containerId, items, activeId, onSelect)`** — generic pill builder. Renders an "All" pill plus one pill per item from the API. Wires click → update state variable → `renderCards()`.
+**`buildPills(containerId, items, getActive, setActive)`** — generic pill builder. Renders an "All" pill plus one pill per item from the API. Wires click → update state variable → `renderCards()`. If `items` is empty or the fetch failed, the container stays empty (no row shown).
 
 **`renderCards()`** — updated filter logic:
 - Search: `c.name.toLowerCase().includes(searchQuery)` (case-insensitive)
@@ -68,7 +84,7 @@ Remove all hardcoded class filter pills. Replace with two empty containers:
 - Race filter: `activeRaceId === null || c.race_id === activeRaceId`
 - Card display: resolves names via `classMap[c.class_id] ?? 'Unknown'` and `raceMap[c.race_id] ?? 'Unknown'`
 
-**Placeholder data removed.** If the API fails, we show an error state rather than silently falling back to fake data.
+**Placeholder data removed.** If the premades fetch fails, we show an error state. Filter rows degrade gracefully as described above.
 
 ### Visible States
 
@@ -77,7 +93,8 @@ Remove all hardcoded class filter pills. Replace with two empty containers:
 | Loading | `#status-msg` visible, grid hidden |
 | Loaded (results) | Grid visible, `#status-msg` hidden |
 | Empty (no matches) | Grid visible with "No characters found" message |
-| Error | `#status-msg` shows error text in `--lotr-error` color |
+| Error (premades fetch failed) | `#status-msg` shows error text in `--lotr-error` color |
+| Partial (classes or races fetch failed) | Cards and search work; affected filter row simply absent |
 
 ---
 
@@ -94,9 +111,9 @@ Current code (client-side):
 // if (searchQuery) params.set('q', searchQuery);
 // if (activeClassId !== null) params.set('class_id', activeClassId);
 // if (activeRaceId !== null) params.set('race_id', activeRaceId);
-// const res = await fetch(`/api/premade/list?${params}`);
+// const res = await fetch(`${API_BASE}/premade/list?${params}`);
 // Then move this fetch call into renderCards() so it re-fetches on each filter change.
-const res = await fetch('/api/premade/list');
+const res = await fetch(`${API_BASE}/premade/list`);
 ```
 
 ### Web server changes also needed (SCRUM-49)
@@ -128,14 +145,23 @@ var response = await _httpClient.GetAsync($"/premades{qs.Value}");
 
 ## Testing
 
-### C# tests to add (`web-server.Tests/EndpointTests.cs`)
+### C# tests to add
 
-These live alongside the existing xUnit endpoint tests and use the same `LotrWebAppFactory` mock pattern.
+New tests go in a **separate test class** (`PremadeShapeTests`) with its own `LotrWebAppFactory` instance so mock data can be configured without affecting the existing `EndpointTests` shared factory.
 
-| Test | Mock setup | Assert |
-|---|---|---|
-| `GetPremades_WithAuth_ReturnsCorrectShape` | Mock returns 3 premades with `Id`, `Name`, `Class_id`, `Race_id`, `Stats` | 200 + JSON array with correct fields |
-| `GetPremades_WithAuth_EmptyList_Returns200AndEmptyArray` | Mock returns empty list | 200 + `[]` |
+The `PremadeShapeTests` factory configures `GetPremadesAsync` to return a list of three `PremadeDTO` objects. Because `PremadeDTO.Stats` is `System.Text.Json.JsonElement` (a struct that cannot be constructed with `new`), tests assert on the raw HTTP response JSON rather than on a constructed DTO — this tests what the browser actually receives and sidesteps the JsonElement construction problem:
+
+```csharp
+var json = await response.Content.ReadAsStringAsync();
+var doc = JsonDocument.Parse(json);
+Assert.True(doc.RootElement[0].TryGetProperty("stats", out _));
+```
+
+| Test class | Test | Mock setup | Assert |
+|---|---|---|---|
+| `PremadeShapeTests` | `GetPremades_WithAuth_ReturnsCorrectShape` | 3 premades with all fields populated | 200 + response JSON contains `id`, `name`, `class_id`, `race_id`, `stats` |
+| `PremadeShapeTests` | `GetPremades_WithAuth_EmptyList_Returns200AndEmptyArray` | Empty list | 200 + response body is `[]` |
+| `EndpointTests` (existing) | Remove stale bug comment from `GetClasses_WithAuth_Returns200` | — | The bug it described (`GetAbilitiesAsync` instead of `GetClassesAsync`) is already fixed in `CharacterController.cs`; the comment is misleading and should be deleted |
 
 ### What still needs a JS test framework (Jest or Playwright)
 
@@ -147,10 +173,11 @@ The following acceptance criteria from SCRUM-58 **cannot be tested** with the ex
 - Combined filtering (search + class + race applied together)
 - Empty results state (all filters active with no matches shows the empty message)
 - Loading state visible before data arrives
-- Error state visible when API call fails
+- Error state visible when premades API call fails
+- Graceful degradation when classes or races fetch fails
 
 **To add these tests**, set up one of:
 - **Jest** — unit-test `renderCards()` logic in isolation with fixture data (fastest, no browser needed)
 - **Playwright** — spin up the full app and drive the browser (highest confidence, tests real DOM)
 
-Until that tooling is added, these scenarios should be manually verified against the running app. Add a tracking comment near `renderCards()` in the HTML.
+Until that tooling is added, these scenarios should be manually verified against the running app. A `// TODO(SCRUM-XX): add JS filter tests` comment is placed near `renderCards()` in the HTML to track this.
