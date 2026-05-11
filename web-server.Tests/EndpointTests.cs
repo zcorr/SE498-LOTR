@@ -24,6 +24,32 @@ using Xunit;
 
 namespace web_server.Tests;
 
+internal static class JwtTestHelper
+{
+    internal static string GenerateToken()
+    {
+        var key = Encoding.ASCII.GetBytes(
+            "Cool_Mega_Secret_Key_For_JWT_Token_Generation");
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "testuser"),
+                new Claim(ClaimTypes.Name, "testuser"),
+            }),
+            Expires = DateTime.UtcNow.AddHours(1),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature),
+        };
+
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
+    }
+}
+
 // =============================================================================
 // TEST FACTORY
 // =============================================================================
@@ -162,28 +188,7 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
     // ── Helper: generate a valid JWT token ──
     // Uses the same secret as your appsettings.json so the server accepts it.
     // IMPORTANT: if you change Jwt:Secret in appsettings.json, change it here too.
-    private static string GenerateTestToken()
-    {
-        var key = Encoding.ASCII.GetBytes(
-            "Cool_Mega_Secret_Key_For_JWT_Token_Generation");
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, "testuser"),
-                new Claim(ClaimTypes.Name, "testuser"),
-            }),
-            Expires = DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature),
-        };
-
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
+    private static string GenerateTestToken() => JwtTestHelper.GenerateToken();
 
     // ── Helper: create an HTTP client with a valid auth cookie ──
     // This simulates a logged-in user. The cookie is read by both:
@@ -691,25 +696,7 @@ public class PremadeShapeTests : IClassFixture<PremadeShapeFactory>
         _factory = factory;
     }
 
-    private static string GenerateTestToken()
-    {
-        var key = Encoding.ASCII.GetBytes(
-            "Cool_Mega_Secret_Key_For_JWT_Token_Generation");
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, "testuser"),
-                new Claim(ClaimTypes.Name, "testuser"),
-            }),
-            Expires = DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature),
-        };
-        return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
-    }
+    private static string GenerateTestToken() => JwtTestHelper.GenerateToken();
 
     private HttpClient CreateAuthenticatedClient()
     {
