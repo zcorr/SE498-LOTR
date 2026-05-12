@@ -515,6 +515,117 @@
       margin: 0 auto 0.6rem;
     }
 
+    /* ── Edit mode ─────────────────────────────────────────── */
+    .edit-banner {
+      background-color: var(--lotr-accent);
+      color: #fff8e7;
+      font-size: 0.68rem;
+      text-align: center;
+      padding: 0.25rem 1rem;
+      letter-spacing: 0.06em;
+    }
+
+    .edit-btn {
+      background: none;
+      border: 1px solid rgba(196,163,90,0.75);
+      border-radius: 4px;
+      color: rgba(196,163,90,0.9);
+      font-size: 0.78rem;
+      font-family: 'Georgia', serif;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .edit-btn:hover { border-color: #d4b870; color: #d4b870; }
+
+    .cancel-btn {
+      background: none;
+      border: 1px solid rgba(196,163,90,0.45);
+      border-radius: 4px;
+      color: rgba(196,163,90,0.7);
+      font-size: 0.78rem;
+      font-family: 'Georgia', serif;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+    }
+    .cancel-btn:hover { border-color: rgba(196,163,90,0.7); color: rgba(196,163,90,0.9); }
+
+    .save-btn {
+      background-color: var(--lotr-accent);
+      border: 1px solid var(--lotr-accent);
+      border-radius: 4px;
+      color: #fff8e7;
+      font-size: 0.78rem;
+      font-family: 'Georgia', serif;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .save-btn:hover { background-color: var(--lotr-accent-hover); }
+    .save-btn:disabled { background-color: rgba(139,105,20,0.45); cursor: not-allowed; }
+
+    .edit-input {
+      background-color: var(--lotr-input-bg);
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 3px;
+      color: var(--lotr-text);
+      font-family: 'Georgia', serif;
+      padding: 0.1rem 0.3rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .edit-input.invalid { border-color: #c0392b; background-color: #fff0ee; color: #c0392b; }
+
+    .edit-stat-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid var(--lotr-card-border);
+      color: var(--lotr-text);
+      font-family: 'Georgia', serif;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+      padding: 0;
+      outline: none;
+    }
+    .edit-stat-input.invalid { border-bottom-color: #c0392b; color: #c0392b; }
+
+    .edit-textarea {
+      background-color: var(--lotr-input-bg);
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 3px;
+      color: var(--lotr-text);
+      font-family: 'Georgia', serif;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      padding: 0.2rem 0.3rem;
+      resize: vertical;
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 40px;
+    }
+
+    .edit-error {
+      color: #c0392b;
+      font-size: 0.6rem;
+      margin-top: 2px;
+      display: block;
+    }
+
+    .field-locked { opacity: 0.6; font-style: italic; }
+
+    .save-feedback {
+      text-align: center;
+      font-size: 0.75rem;
+      padding: 0.35rem 1rem;
+      margin: 0.4rem auto;
+      max-width: 1100px;
+      border-radius: 4px;
+    }
+    .save-feedback.success { background-color: #2d4a1e; color: #7ecb52; border: 1px solid #4a7a2e; }
+    .save-feedback.failure { background-color: #4a1e1e; color: #e07070; border: 1px solid #c0392b; }
+
     /* ── Print styles ──────────────────────────────────────── */
     @page { size: A4 landscape; margin: 0.6cm; }
     @media print {
@@ -577,7 +688,12 @@
 <main>
   <div class="above-sheet-bar">
     <a href="javascript:history.back()" class="back-btn">← Back</a>
-    <button class="print-btn" onclick="window.print()">🖨 Print</button>
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+      <button class="print-btn" id="print-btn" onclick="window.print()">🖨 Print</button>
+      <button class="edit-btn"   id="edit-btn"   onclick="enterEditMode()">✏ Edit</button>
+      <button class="cancel-btn" id="cancel-btn" style="display:none" onclick="exitEditMode()">Cancel</button>
+      <button class="save-btn"   id="save-btn"   style="display:none" onclick="saveEdits()">💾 Save</button>
+    </div>
   </div>
   <div class="sheet-wrap">
 
@@ -864,6 +980,7 @@
   };
 
   const sheet = normalizeSheetData(raw ? JSON.parse(raw) : DEV_PREVIEW);
+  let editMode = false;
 
   // ── Helpers ───────────────────────────────────────────────
   function normalizeSheetData(data) {
@@ -947,8 +1064,8 @@
       col.innerHTML += `
           <div class="ability-block">
             <div class="ability-name">${a.label.toUpperCase()}</div>
-            <div class="ability-score">${score}</div>
-            <div class="ability-mod">${modStr}</div>
+            <div class="ability-score" id="stat-score-${a.key}">${score}</div>
+            <div class="ability-mod"   id="stat-mod-${a.key}">${modStr}</div>
           </div>`;
     });
   }
@@ -1087,6 +1204,131 @@
     } catch (err) {
       console.warn('Could not load class abilities for sheet:', err);
     }
+  }
+
+  // ── Edit mode ─────────────────────────────────────────────
+  function enterEditMode() {
+    if (editMode) return;
+    editMode = true;
+
+    document.getElementById('edit-btn').style.display = 'none';
+    document.getElementById('print-btn').style.display = 'none';
+    document.getElementById('cancel-btn').style.display = 'inline-block';
+    document.getElementById('save-btn').style.display = 'inline-block';
+
+    const banner = document.createElement('div');
+    banner.className = 'edit-banner';
+    banner.id = 'edit-banner';
+    banner.textContent = '✏ Edit Mode — unsaved changes will be lost if you navigate away';
+    const sheetWrap = document.querySelector('.sheet-wrap');
+    sheetWrap.insertBefore(banner, sheetWrap.firstChild);
+
+    ['hdr-class', 'hdr-race', 'hdr-xp'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('field-locked');
+    });
+
+    const headerFields = [
+      { id: 'hdr-name',       field: 'name',       fontSize: '1.6rem', fontWeight: 'bold' },
+      { id: 'hdr-background', field: 'background',  fontSize: '0.88rem' },
+      { id: 'hdr-player',     field: 'playerName',  fontSize: '0.88rem' },
+      { id: 'hdr-alignment',  field: 'alignment',   fontSize: '0.88rem' },
+    ];
+    headerFields.forEach(({ id, field, fontSize, fontWeight }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const cur = sheet[field] ?? '';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'edit-input';
+      input.dataset.editField = field;
+      input.value = (cur === '—' || !cur) ? '' : cur;
+      input.style.fontSize = fontSize;
+      if (fontWeight) input.style.fontWeight = fontWeight;
+      input.addEventListener('input', validateEditInputs);
+      el.textContent = '';
+      el.appendChild(input);
+    });
+
+    ABILITIES.forEach(({ key }) => {
+      const scoreEl = document.getElementById(`stat-score-${key}`);
+      const modEl   = document.getElementById(`stat-mod-${key}`);
+      if (!scoreEl) return;
+      const val = sheet.stats?.[key] ?? 10;
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'edit-stat-input';
+      input.dataset.editField = `stat-${key}`;
+      input.dataset.statKey = key;
+      input.value = val;
+      input.addEventListener('input', () => {
+        const v = parseInt(input.value);
+        if (modEl && !isNaN(v) && v >= 1 && v <= 30) {
+          modEl.textContent = mod(v);
+        } else if (modEl) {
+          modEl.textContent = '—';
+        }
+        validateEditInputs();
+      });
+      scoreEl.textContent = '';
+      scoreEl.appendChild(input);
+    });
+
+    const hpEl = document.getElementById('stat-hp-max');
+    if (hpEl) {
+      const val = sheet.stats?.charhealth ?? 0;
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'edit-stat-input';
+      input.style.fontSize = '0.9rem';
+      input.style.fontWeight = 'bold';
+      input.dataset.editField = 'stat-charhealth';
+      input.value = val;
+      input.addEventListener('input', validateEditInputs);
+      hpEl.textContent = '';
+      hpEl.appendChild(input);
+    }
+
+    const traitFields = [
+      { id: 'trait-personality', field: 'personalityTraits' },
+      { id: 'trait-ideals',      field: 'ideals' },
+      { id: 'trait-bonds',       field: 'bonds' },
+      { id: 'trait-flaws',       field: 'flaws' },
+    ];
+    traitFields.forEach(({ id, field }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const val = sheet[field] ?? '';
+      const textarea = document.createElement('textarea');
+      textarea.className = 'edit-textarea';
+      textarea.dataset.editField = field;
+      textarea.value = (val === '—' || !val) ? '' : val;
+      el.textContent = '';
+      el.appendChild(textarea);
+    });
+  }
+
+  function exitEditMode() {
+    editMode = false;
+
+    const banner = document.getElementById('edit-banner');
+    if (banner) banner.remove();
+
+    ['hdr-class', 'hdr-race', 'hdr-xp'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('field-locked');
+    });
+
+    document.getElementById('edit-btn').style.display   = 'inline-block';
+    document.getElementById('print-btn').style.display  = 'inline-block';
+    document.getElementById('cancel-btn').style.display = 'none';
+    document.getElementById('save-btn').style.display   = 'none';
+
+    const failure = document.getElementById('save-failure-msg');
+    if (failure) failure.remove();
+
+    populateSheet(sheet);
+    loadClassAbilities(sheet);
   }
 
   // ── Main populate function ────────────────────────────────
