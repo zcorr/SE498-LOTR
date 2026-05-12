@@ -22,7 +22,7 @@ public class AuthController : Controller
         var token = Request.Cookies["AuthToken"];
         if (!string.IsNullOrWhiteSpace(token) && _authService.ValidateToken(token))
         {
-            return Redirect("/Premade");
+            return Redirect("/premade");
         }
 
         try
@@ -39,6 +39,18 @@ public class AuthController : Controller
             return StatusCode(500, $"Error serving login page: {ex.Message}");
         }
     }
+    
+    [AllowAnonymous]
+    public IActionResult Register()
+    {
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "frontend", "register.html");
+        if (!System.IO.File.Exists(filePath))
+        {
+            return NotFound("Registration page not found");
+        }
+        return PhysicalFile(filePath, "text/html");
+    }
+    
 }
 
 // Separate API controller for authentication endpoints
@@ -90,5 +102,22 @@ public class AuthApiController : ControllerBase
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+    
+    [AllowAnonymous]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] LoginRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest("Username and password are required");
+
+        if (request.Password.Length < 6)
+            return BadRequest("Password must be at least 6 characters");
+
+        var success = await _authService.RegisterUserAsync(request.Username, request.Password);
+        if (!success)
+            return Conflict("Username already exists");
+
+        return Ok(new { message = "Registration successful" });
     }
 }

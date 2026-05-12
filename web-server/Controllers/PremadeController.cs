@@ -6,6 +6,7 @@ using System.IO;
 namespace web_server.Controllers;
 
 [Authorize] // Require authentication for all premade operations
+[Route("premade")]
 public class PremadeController : Controller
 {
     private readonly ILotrApiClient _apiClient;
@@ -15,7 +16,8 @@ public class PremadeController : Controller
         _apiClient = apiClient;
     }
 
-    // GET: /Premade/Index - Serve the premades page
+    // GET: /premade - Serve the premades page
+    [HttpGet("")]
     public IActionResult Index()
     {
         // Serve the frontend premades.html file

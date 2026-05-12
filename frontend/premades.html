@@ -255,223 +255,230 @@
 
 <body>
 
-  <!-- Nav -->
-  <nav class="lotr-nav">
-    <a href="/Premade" class="nav-brand">⚔ Middle-earth Sheets</a>
-    <div class="nav-links">
-      <a href="/Character/Create">Create Character</a>
-      <a href="/Premade" class="active">Premade Characters</a>
-      <a href="/Auth/Login" id="logout-link">Log Out</a>
-    </div>
-  </nav>
+<!-- Nav -->
+<nav class="lotr-nav">
+  <a href="/premade" class="nav-brand">⚔ Middle-earth Sheets</a>
+  <div class="nav-links">
+    <a href="/character/create">Create Character</a>
+    <a href="/my-characters">My Characters</a>
+    <a href="/premade" class="active">Premade Characters</a>
+    <a href="#" id="logout-link">Log Out</a>
+  </div>
+</nav>
 
-  <main>
-    <h1 class="page-heading">Premade Character Search</h1>
-    <p class="page-heading-sub">Choose a legendary hero of Middle-earth</p>
+<main>
+  <h1 class="page-heading">Premade Character Search</h1>
+  <p class="page-heading-sub">Choose a legendary hero of Middle-earth</p>
 
-    <!-- Search -->
-    <div class="search-wrap">
-      <input type="text" id="search-input" class="search-input" placeholder="🔍  Search characters…" list="name-suggestions" />
-      <datalist id="name-suggestions"></datalist>
-    </div>
+  <!-- Search -->
+  <div class="search-wrap">
+    <input type="text" id="search-input" class="search-input" placeholder="🔍  Search characters…" list="name-suggestions" />
+    <datalist id="name-suggestions"></datalist>
+  </div>
 
-    <!-- Filters -->
-    <div class="filter-bar">
-      <span class="filter-label">Class:</span>
-      <button class="filter-pill active" data-filter-type="class" data-filter-value="">All</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="1">Warrior</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="2">Istari</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="3">Burglar</button>
-      <button class="filter-pill" data-filter-type="class" data-filter-value="4">Creature</button>
-    </div>
+  <!-- Filters -->
+  <div class="filter-bar">
+    <span class="filter-label">Class:</span>
+    <button class="filter-pill active" data-filter-type="class" data-filter-value="">All</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="1">Warrior</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="2">Istari</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="3">Burglar</button>
+    <button class="filter-pill" data-filter-type="class" data-filter-value="4">Creature</button>
+  </div>
 
-    <div class="filter-bar" id="race-filter-bar">
-      <span class="filter-label">Race:</span>
-      <button class="filter-pill active" data-filter-type="race" data-filter-value="">All</button>
-    </div>
+  <div class="filter-bar" id="race-filter-bar">
+    <span class="filter-label">Race:</span>
+    <button class="filter-pill active" data-filter-type="race" data-filter-value="">All</button>
+  </div>
 
-    <!-- Status / results -->
-    <div id="status-msg">Loading characters…</div>
-    <div class="card-grid" id="card-grid" style="display:none;"></div>
-    <div class="pagination-bar" id="pagination-bar">
-      <button class="page-btn" id="prev-page">Previous</button>
-      <div class="page-summary" id="page-summary">0 of 0</div>
-      <button class="page-btn" id="next-page">Next</button>
-    </div>
-  </main>
+  <!-- Status / results -->
+  <div id="status-msg">Loading characters…</div>
+  <div class="card-grid" id="card-grid" style="display:none;"></div>
+  <div class="pagination-bar" id="pagination-bar">
+    <button class="page-btn" id="prev-page">Previous</button>
+    <div class="page-summary" id="page-summary">0 of 0</div>
+    <button class="page-btn" id="next-page">Next</button>
+  </div>
+</main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // ── Auth guard ────────────────────────────────────────────
-    // TODO: re-enable before going live
-    // if (!sessionStorage.getItem('bearerToken')) {
-    //   window.location.href = 'login.html';
-    // }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── Auth guard ────────────────────────────────────────────
+  // TODO: re-enable before going live
+  // if (!sessionStorage.getItem('bearerToken')) {
+  //   window.location.href = '/auth/login';
+  // }
 
-    // ── API routes ────────────────────────────────────────────
-    const PREMADES_API = '/api/premade/list';
-    const NAMES_API = '/api/proxy/names';
-    const RACES_API = '/api/proxy/race';
-    const LOGOUT_API = '/api/auth/logout';
-    const PAGE_LIMIT = 6;
+  // ── API routes ────────────────────────────────────────────
+  const PREMADES_API = '/api/premade/list';
+  const NAMES_API = '/api/proxy/names';
+  const RACES_API = '/api/proxy/race';
+  const LOGOUT_API = '/api/auth/logout';
+  const PAGE_LIMIT = 6;
 
-    // ── State ─────────────────────────────────────────────────
-    const classNameById = new Map([
-      [1, 'Warrior'],
-      [2, 'Istari'],
-      [3, 'Burglar'],
-      [4, 'Creature'],
-    ]);
-    const raceNameById = new Map();
+  // ── State ─────────────────────────────────────────────────
+  const classNameById = new Map([
+    [1, 'Warrior'],
+    [2, 'Istari'],
+    [3, 'Burglar'],
+    [4, 'Creature'],
+  ]);
+  const raceNameById = new Map();
 
-    let currentCharacters = [];
-    let totalCharacters = 0;
-    let activeClassFilter = null;
-    let activeRaceFilter = null;
-    let activeOffset = 0;
-    let searchDebounceId = null;
+  let currentCharacters = [];
+  let totalCharacters = 0;
+  let activeClassFilter = null;
+  let activeRaceFilter = null;
+  let activeOffset = 0;
+  let searchDebounceId = null;
 
-    function showStatus(message) {
-      const status = document.getElementById('status-msg');
-      const grid = document.getElementById('card-grid');
-      const pagination = document.getElementById('pagination-bar');
+  function showStatus(message) {
+    const status = document.getElementById('status-msg');
+    const grid = document.getElementById('card-grid');
+    const pagination = document.getElementById('pagination-bar');
 
-      status.textContent = message;
-      status.style.display = 'block';
-      grid.style.display = 'none';
-      pagination.style.display = 'none';
+    status.textContent = message;
+    status.style.display = 'block';
+    grid.style.display = 'none';
+    pagination.style.display = 'none';
+  }
+
+  function buildQueryParams(includePagination = true) {
+    const params = new URLSearchParams();
+    const query = document.getElementById('search-input').value.trim();
+
+    if (activeClassFilter !== null) params.set('class_id', String(activeClassFilter));
+    if (activeRaceFilter !== null) params.set('race_id', String(activeRaceFilter));
+    if (query) params.set('q', query);
+    if (includePagination) {
+      params.set('limit', String(PAGE_LIMIT));
+      params.set('offset', String(activeOffset));
     }
 
-    function buildQueryParams(includePagination = true) {
-      const params = new URLSearchParams();
-      const query = document.getElementById('search-input').value.trim();
+    return params;
+  }
 
-      if (activeClassFilter !== null) params.set('class_id', String(activeClassFilter));
-      if (activeRaceFilter !== null) params.set('race_id', String(activeRaceFilter));
-      if (query) params.set('q', query);
-      if (includePagination) {
-        params.set('limit', String(PAGE_LIMIT));
-        params.set('offset', String(activeOffset));
+  function buildUrl(path, includePagination = true) {
+    const params = buildQueryParams(includePagination);
+    return params.size ? `${path}?${params.toString()}` : path;
+  }
+
+  async function fetchPremades() {
+    showStatus('Loading characters…');
+
+    try {
+      const response = await fetch(buildUrl(PREMADES_API), { credentials: 'same-origin' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      return params;
+      const payload = await response.json();
+      currentCharacters = Array.isArray(payload.items) ? payload.items : [];
+      totalCharacters = typeof payload.total === 'number' ? payload.total : currentCharacters.length;
+      activeOffset = typeof payload.offset === 'number' ? payload.offset : activeOffset;
+
+      renderCards();
+      renderPagination();
+      void fetchNameSuggestions();
+    } catch (err) {
+      console.error('Failed to load premades:', err);
+      document.getElementById('status-msg').textContent = 'Could not load premade characters right now.';
     }
+  }
 
-    function buildUrl(path, includePagination = true) {
-      const params = buildQueryParams(includePagination);
-      return params.size ? `${path}?${params.toString()}` : path;
-    }
-
-    async function fetchPremades() {
-      showStatus('Loading characters…');
-
-      try {
-        const response = await fetch(buildUrl(PREMADES_API), { credentials: 'same-origin' });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const payload = await response.json();
-        currentCharacters = Array.isArray(payload.items) ? payload.items : [];
-        totalCharacters = typeof payload.total === 'number' ? payload.total : currentCharacters.length;
-        activeOffset = typeof payload.offset === 'number' ? payload.offset : activeOffset;
-
-        renderCards();
-        renderPagination();
-        void fetchNameSuggestions();
-      } catch (err) {
-        console.error('Failed to load premades:', err);
-        document.getElementById('status-msg').textContent = 'Could not load premade characters right now.';
+  async function fetchNameSuggestions() {
+    try {
+      const response = await fetch(buildUrl(NAMES_API, false), { credentials: 'same-origin' });
+      if (!response.ok) {
+        return;
       }
-    }
 
-    async function fetchNameSuggestions() {
-      try {
-        const response = await fetch(buildUrl(NAMES_API, false), { credentials: 'same-origin' });
-        if (!response.ok) {
-          return;
-        }
+      const names = await response.json();
+      const suggestions = document.getElementById('name-suggestions');
+      suggestions.innerHTML = '';
 
-        const names = await response.json();
-        const suggestions = document.getElementById('name-suggestions');
-        suggestions.innerHTML = '';
-
-        names.forEach(name => {
-          const option = document.createElement('option');
-          option.value = name;
-          suggestions.appendChild(option);
-        });
-      } catch {
-        // Search suggestions are optional.
-      }
-    }
-
-    async function fetchRaces() {
-      try {
-        const response = await fetch(RACES_API, { credentials: 'same-origin' });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const races = await response.json();
-        races.forEach(race => raceNameById.set(race.id, race.name));
-        buildRaceFilterPills(races);
-      } catch (err) {
-        console.warn('Could not load races for filter pills:', err);
-      }
-    }
-
-    function buildRaceFilterPills(races) {
-      const container = document.getElementById('race-filter-bar');
-      container.innerHTML = '<span class="filter-label">Race:</span>';
-
-      const allButton = document.createElement('button');
-      allButton.className = 'filter-pill active';
-      allButton.dataset.filterType = 'race';
-      allButton.dataset.filterValue = '';
-      allButton.textContent = 'All';
-      allButton.addEventListener('click', () => applyRaceFilter(null));
-      container.appendChild(allButton);
-
-      races.forEach(race => {
-        const button = document.createElement('button');
-        button.className = 'filter-pill';
-        button.dataset.filterType = 'race';
-        button.dataset.filterValue = String(race.id);
-        button.textContent = race.name;
-        button.addEventListener('click', () => applyRaceFilter(race.id));
-        container.appendChild(button);
+      names.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        suggestions.appendChild(option);
       });
+    } catch {
+      // Search suggestions are optional.
     }
+  }
 
-    // ── Render cards ──────────────────────────────────────────
-    function renderCards() {
-      const grid = document.getElementById('card-grid');
-      const status = document.getElementById('status-msg');
+  async function fetchRaces() {
+    try {
+      const response = await fetch(RACES_API, { credentials: 'same-origin' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-      grid.innerHTML = '';
+      const races = await response.json();
+      races.forEach(race => raceNameById.set(race.id, race.name));
+      buildRaceFilterPills(races);
+    } catch (err) {
+      console.warn('Could not load races for filter pills:', err);
+    }
+  }
 
-      if (currentCharacters.length === 0) {
-        grid.innerHTML = '<div class="no-results">No characters found matching your search.</div>';
-      } else {
-        currentCharacters.forEach(c => {
-          const stats = c.stats || {};
-          const classLabel = c.class || classNameById.get(c.class_id) || `Class ${c.class_id}`;
-          const raceLabel = c.race || raceNameById.get(c.race_id) || `Race ${c.race_id}`;
-          const card = document.createElement('div');
-          card.className = 'char-card';
-          card.innerHTML = `
+  function buildRaceFilterPills(races) {
+    const container = document.getElementById('race-filter-bar');
+    container.innerHTML = '<span class="filter-label">Race:</span>';
+
+    const allButton = document.createElement('button');
+    allButton.className = 'filter-pill active';
+    allButton.dataset.filterType = 'race';
+    allButton.dataset.filterValue = '';
+    allButton.textContent = 'All';
+    allButton.addEventListener('click', () => applyRaceFilter(null));
+    container.appendChild(allButton);
+
+    races.forEach(race => {
+      const button = document.createElement('button');
+      button.className = 'filter-pill';
+      button.dataset.filterType = 'race';
+      button.dataset.filterValue = String(race.id);
+      button.textContent = race.name;
+      button.addEventListener('click', () => applyRaceFilter(race.id));
+      container.appendChild(button);
+    });
+  }
+
+  // ── Render cards ──────────────────────────────────────────
+  function renderCards() {
+    const grid = document.getElementById('card-grid');
+    const status = document.getElementById('status-msg');
+
+    grid.innerHTML = '';
+
+    if (currentCharacters.length === 0) {
+      grid.innerHTML = '<div class="no-results">No characters found matching your search.</div>';
+    } else {
+      currentCharacters.forEach(c => {
+        const stats = c.stats || {};
+        const classLabel = c.class || classNameById.get(c.class_id) || `Class ${c.class_id}`;
+        const raceLabel = c.race || raceNameById.get(c.race_id) || `Race ${c.race_id}`;
+        const card = document.createElement('div');
+        card.className = 'char-card';
+        card.innerHTML = `
             <div class="char-name">${c.name}</div>
             <div class="char-meta">${classLabel} · ${raceLabel}</div>
             <div class="stat-row">
               ${Object.entries(stats).map(([k, v]) =>
                 `<span class="stat-badge"><strong>${k}</strong> ${v}</span>`
-              ).join('')}
+        ).join('')}
             </div>
             <button class="view-btn">View Sheet</button>
           `;
 
-          const sheetPayload = { ...c, class: classLabel, race: raceLabel };
+          const sheetPayload = {
+            ...c,
+            classId: c.classId ?? c.class_id,
+            raceId: c.raceId ?? c.race_id,
+            class: classLabel,
+            race: raceLabel,
+          };
           card.querySelector('.view-btn').addEventListener('click', () => selectCharacter(sheetPayload));
           grid.appendChild(card);
         });
@@ -481,98 +488,100 @@
       grid.style.display = 'grid';
     }
 
-    function renderPagination() {
-      const pagination = document.getElementById('pagination-bar');
-      const summary = document.getElementById('page-summary');
-      const prev = document.getElementById('prev-page');
-      const next = document.getElementById('next-page');
+  }
 
-      if (totalCharacters === 0) {
-        pagination.style.display = 'none';
-        return;
-      }
+  function renderPagination() {
+    const pagination = document.getElementById('pagination-bar');
+    const summary = document.getElementById('page-summary');
+    const prev = document.getElementById('prev-page');
+    const next = document.getElementById('next-page');
 
-      const start = activeOffset + 1;
-      const end = activeOffset + currentCharacters.length;
-
-      summary.textContent = `${start}-${end} of ${totalCharacters}`;
-      prev.disabled = activeOffset === 0;
-      next.disabled = activeOffset + PAGE_LIMIT >= totalCharacters;
-      pagination.style.display = 'flex';
+    if (totalCharacters === 0) {
+      pagination.style.display = 'none';
+      return;
     }
 
-    function applyClassFilter(classId) {
-      activeClassFilter = classId;
-      activeOffset = 0;
-      document.querySelectorAll('.filter-pill[data-filter-type="class"]').forEach(pill => {
-        const pillValue = pill.dataset.filterValue ? Number(pill.dataset.filterValue) : null;
-        pill.classList.toggle('active', pillValue === classId);
-      });
-      fetchPremades();
-    }
+    const start = activeOffset + 1;
+    const end = activeOffset + currentCharacters.length;
 
-    function applyRaceFilter(raceId) {
-      activeRaceFilter = raceId;
-      activeOffset = 0;
-      document.querySelectorAll('.filter-pill[data-filter-type="race"]').forEach(pill => {
-        const pillValue = pill.dataset.filterValue ? Number(pill.dataset.filterValue) : null;
-        pill.classList.toggle('active', pillValue === raceId);
-      });
-      fetchPremades();
-    }
+    summary.textContent = `${start}-${end} of ${totalCharacters}`;
+    prev.disabled = activeOffset === 0;
+    next.disabled = activeOffset + PAGE_LIMIT >= totalCharacters;
+    pagination.style.display = 'flex';
+  }
 
-    // ── Select character → go to sheet ───────────────────────
-    function selectCharacter(character) {
-      sessionStorage.setItem('currentSheet', JSON.stringify(character));
-      window.location.href = '/Character/Sheet';
-    }
-
-    // ── Search input ──────────────────────────────────────────
-    document.getElementById('search-input').addEventListener('input', () => {
-      window.clearTimeout(searchDebounceId);
-      searchDebounceId = window.setTimeout(() => {
-        activeOffset = 0;
-        fetchPremades();
-      }, 250);
-    });
-
-    // ── Filter pills ──────────────────────────────────────────
+  function applyClassFilter(classId) {
+    activeClassFilter = classId;
+    activeOffset = 0;
     document.querySelectorAll('.filter-pill[data-filter-type="class"]').forEach(pill => {
-      pill.addEventListener('click', () => {
-        const classId = pill.dataset.filterValue ? Number(pill.dataset.filterValue) : null;
-        applyClassFilter(classId);
-      });
+      const pillValue = pill.dataset.filterValue ? Number(pill.dataset.filterValue) : null;
+      pill.classList.toggle('active', pillValue === classId);
     });
+    fetchPremades();
+  }
 
-    document.getElementById('prev-page').addEventListener('click', () => {
-      if (activeOffset === 0) return;
-      activeOffset = Math.max(0, activeOffset - PAGE_LIMIT);
+  function applyRaceFilter(raceId) {
+    activeRaceFilter = raceId;
+    activeOffset = 0;
+    document.querySelectorAll('.filter-pill[data-filter-type="race"]').forEach(pill => {
+      const pillValue = pill.dataset.filterValue ? Number(pill.dataset.filterValue) : null;
+      pill.classList.toggle('active', pillValue === raceId);
+    });
+    fetchPremades();
+  }
+
+  // ── Select character → go to sheet ───────────────────────
+  function selectCharacter(character) {
+    sessionStorage.setItem('currentSheet', JSON.stringify(character));
+    window.location.href = '/character/sheet';
+  }
+
+  // ── Search input ──────────────────────────────────────────
+  document.getElementById('search-input').addEventListener('input', () => {
+    window.clearTimeout(searchDebounceId);
+    searchDebounceId = window.setTimeout(() => {
+      activeOffset = 0;
       fetchPremades();
-    });
+    }, 250);
+  });
 
-    document.getElementById('next-page').addEventListener('click', () => {
-      if (activeOffset + PAGE_LIMIT >= totalCharacters) return;
-      activeOffset += PAGE_LIMIT;
-      fetchPremades();
+  // ── Filter pills ──────────────────────────────────────────
+  document.querySelectorAll('.filter-pill[data-filter-type="class"]').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const classId = pill.dataset.filterValue ? Number(pill.dataset.filterValue) : null;
+      applyClassFilter(classId);
     });
+  });
 
-    // ── Logout ────────────────────────────────────────────────
-    document.getElementById('logout-link').addEventListener('click', async (e) => {
-      e.preventDefault();
-      try {
-        await fetch(LOGOUT_API, { method: 'POST', credentials: 'same-origin' });
-      } catch {
-        // Fall through to local cleanup and redirect.
-      }
-      sessionStorage.removeItem('bearerToken');
-      window.location.href = '/Auth/Login';
-    });
+  document.getElementById('prev-page').addEventListener('click', () => {
+    if (activeOffset === 0) return;
+    activeOffset = Math.max(0, activeOffset - PAGE_LIMIT);
+    fetchPremades();
+  });
 
-    // ── Init ──────────────────────────────────────────────────
-    (async function init() {
-      await fetchRaces();
-      await fetchPremades();
-    })();
-  </script>
+  document.getElementById('next-page').addEventListener('click', () => {
+    if (activeOffset + PAGE_LIMIT >= totalCharacters) return;
+    activeOffset += PAGE_LIMIT;
+    fetchPremades();
+  });
+
+  // ── Logout ────────────────────────────────────────────────
+  document.getElementById('logout-link').addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      await fetch(LOGOUT_API, { method: 'POST', credentials: 'same-origin' });
+    } catch {
+      // Fall through to local cleanup and redirect.
+    }
+    sessionStorage.removeItem('bearerToken');
+    window.location.href = '/auth/login';
+  });
+
+  // ── Init ──────────────────────────────────────────────────
+  (async function init() {
+    await fetchRaces();
+    await fetchPremades();
+  })();
+</script>
 </body>
 </html>

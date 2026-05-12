@@ -35,6 +35,9 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.OpenApi;
 using Npgsql;
 using NpgsqlTypes;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,7 +68,32 @@ builder.Services.AddSingleton<NpgsqlDataSource>(sp =>
 
 builder.Services.AddOpenApi();
 
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+
+if(string.IsNullOrWhiteSpace(jwtSecret)) {
+	jwtSecret = "Cool_Mega_Secret_Key_For_JWT_Token_Generation";
+}
+
+var key  = Encoding.ASCII.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
+	options.RequireHttpsMetadata = false;
+	options.TokenValidationParameters = new TokenValidationParameters{
+		ValidateIssuerSigningKey = true,
+		IssuerSigningKey = new SymmetricSecurityKey(key),
+		ValidateIssuer = false,
+		ValidateAudience = false,
+		ValidateLifetime = true,
+		ClockSkew = TimeSpan.Zero
+	};
+});
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 var connectionString = app.Configuration.GetConnectionString("DefaultConnection");
 if (!string.IsNullOrWhiteSpace(connectionString))
@@ -161,7 +189,8 @@ app.MapGet("/class/{id:int}", async (int id, NpgsqlDataSource ds) =>
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Get class by id (name, desc, racialids).");
+    .WithSummary("Get class by id (name, desc, racialids).")
+	.RequireAuthorization();
 
 app.MapGet("/stats", async (NpgsqlDataSource ds) =>
 {
@@ -184,7 +213,8 @@ app.MapGet("/stats", async (NpgsqlDataSource ds) =>
     return Results.Json(list, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("All stat definitions (base values).");
+    .WithSummary("All stat definitions (base values).")
+	.RequireAuthorization();
 
 app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, CancellationToken cancellationToken) =>
 {
@@ -202,7 +232,8 @@ app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, Cancellatio
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Preferred single-stat lookup by name (case-insensitive).");
+    .WithSummary("Get a single stat definition by name (case-insensitive).")
+	.RequireAuthorization();
 
 app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
 {
@@ -215,7 +246,8 @@ app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Character health stat row (name charhealth).");
+    .WithSummary("Character health stat row (name charhealth).")
+	.RequireAuthorization();
 
 app.MapGet("/strength", async (NpgsqlDataSource ds) =>
 {
@@ -228,35 +260,33 @@ app.MapGet("/strength", async (NpgsqlDataSource ds) =>
         jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Strength stat row.");
+    .WithSummary("Strength stat row.")
+	.RequireAuthorization();
 
-app.MapGet("/abilities", async (NpgsqlDataSource ds) =>
+app.MapGet("/abilities", async (string? class_id, NpgsqlDataSource ds) =>
 {
-    await using var conn = await ds.OpenConnectionAsync();
-    await using var cmd = new NpgsqlCommand(
-        """
-        SELECT id, name, description, class_id
-        FROM abilities
-        ORDER BY id
-        """,
-        conn);
-    await using var reader = await cmd.ExecuteReaderAsync();
-    var list = new List<object>();
-    while (await reader.ReadAsync())
-    {
-        list.Add(new
-        {
-            id = reader.GetInt32(0),
-            name = reader.GetString(1),
-            desc = reader.IsDBNull(2) ? "" : reader.GetString(2),
-            class_id = reader.GetInt32(3),
-        });
-    }
+    if (class_id is null)
+        return await Program.GetAbilitiesResultAsync(ds, jsonOptions, null);
 
-    return Results.Json(list, jsonOptions);
+    if (!int.TryParse(class_id, out var parsedClassId) || parsedClassId < 0)
+        return Results.BadRequest(new { error = "class_id must be a non-negative integer." });
+
+    return await Program.GetAbilitiesResultAsync(ds, jsonOptions, parsedClassId);
 })
     .WithTags("Game data")
-    .WithSummary("Abilities (id, name, desc, class_id).");
+    .WithSummary("Abilities (id, name, desc, class_id), optionally filtered by class_id.")
+	.RequireAuthorization();
+
+app.MapGet("/class/{id:int}/abilities", async (int id, NpgsqlDataSource ds) =>
+{
+    if (id < 0)
+        return Results.BadRequest(new { error = "id must be a non-negative integer." });
+
+    return await Program.GetAbilitiesResultAsync(ds, jsonOptions, id);
+})
+    .WithTags("Game data")
+    .WithSummary("Abilities for a specific class id.")
+	.RequireAuthorization();
 
 app.MapGet("/race", async (NpgsqlDataSource ds) =>
 {
@@ -279,7 +309,33 @@ app.MapGet("/race", async (NpgsqlDataSource ds) =>
     return Results.Json(list, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("All races.");
+    .WithSummary("All races.")
+	.RequireAuthorization();
+
+app.MapGet("/classes", async (NpgsqlDataSource ds) =>
+    {
+        await using var conn = await ds.OpenConnectionAsync();
+        await using var cmd = new NpgsqlCommand(
+            "SELECT id, name, description, racial_ids FROM classes ORDER BY id",
+            conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            list.Add(new
+            {
+                id = reader.GetInt32(0),
+                name = reader.GetString(1),
+                desc = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                racialids = reader.GetFieldValue<int[]>(3),
+            });
+        }
+
+        return Results.Json(list, jsonOptions);
+    })
+    .WithTags("Game data")
+    .WithSummary("All classes.")
+    .RequireAuthorization();
 
 app.MapGet("/premades", async (NpgsqlDataSource ds, int? class_id, int? race_id, string? q, int? limit, int? offset) =>
 {
@@ -345,7 +401,8 @@ app.MapGet("/premades", async (NpgsqlDataSource ds, int? class_id, int? race_id,
     }, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Premade characters with optional filters and pagination.");
+    .WithSummary("Premade characters with optional filters and pagination.")
+	.RequireAuthorization();
 
 app.MapGet("/names", async (NpgsqlDataSource ds, int? class_id, int? race_id, string? q) =>
 {
@@ -371,7 +428,8 @@ app.MapGet("/names", async (NpgsqlDataSource ds, int? class_id, int? race_id, st
     return Results.Json(names, jsonOptions);
 })
     .WithTags("Game data")
-    .WithSummary("Premade character names.");
+    .WithSummary("Premade character names.")
+	.RequireAuthorization();
 
 app.MapPost("/generate", async (GenerateRequest? body, NpgsqlDataSource ds) =>
 {
@@ -408,13 +466,58 @@ app.MapPost("/generate", async (GenerateRequest? body, NpgsqlDataSource ds) =>
     var raceModifiers = reader.IsDBNull(5) ? "" : reader.GetString(5);
 
     await reader.CloseAsync();
-    await using var statsCmd = new NpgsqlCommand(
-        "SELECT name, base_value FROM stats ORDER BY name",
-        conn);
-    await using var statsReader = await statsCmd.ExecuteReaderAsync();
+
+// ── Roll stats: 4d6 drop lowest, per standard D&D rules ──
+    var random = new Random();
+
+    int Roll4d6DropLowest()
+    {
+        var rolls = new int[4];
+        for (int i = 0; i < 4; i++)
+            rolls[i] = random.Next(1, 7); // 1-6 inclusive
+        Array.Sort(rolls);
+        return rolls[1] + rolls[2] + rolls[3]; // drop lowest (index 0)
+    }
+
+// Base rolled stats
+    var statNames = new[] { "strength", "dexterity", "constitution",
+        "intelligence", "wisdom", "charisma" };
     var statsDict = new Dictionary<string, int>();
-    while (await statsReader.ReadAsync())
-        statsDict[statsReader.GetString(0)] = statsReader.GetInt32(1);
+    foreach (var name in statNames)
+        statsDict[name] = Roll4d6DropLowest();
+
+// ── Apply race modifiers ──
+    if (!string.IsNullOrWhiteSpace(raceModifiers))
+    {
+        try
+        {
+            var modifiers = JsonSerializer.Deserialize<Dictionary<string, int>>(raceModifiers);
+            if (modifiers != null)
+            {
+                foreach (var (stat, bonus) in modifiers)
+                {
+                    if (statsDict.ContainsKey(stat))
+                        statsDict[stat] += bonus;
+                }
+            }
+        }
+        catch
+        {
+            // If modifiers aren't valid JSON, skip them
+        }
+    }
+
+// ── Get charhealth from the stats table ──
+    await using var healthCmd = new NpgsqlCommand(
+        "SELECT base_value FROM stats WHERE lower(name) = 'charhealth'",
+        conn);
+    var healthResult = await healthCmd.ExecuteScalarAsync();
+    var baseHealth = healthResult is int h ? h : 20;
+
+// Add charhealth with CON modifier bonus
+    var conModifier = (statsDict["constitution"] - 10) / 2;
+    statsDict["charhealth"] = baseHealth + conModifier;
+
 
     var sheet = new
     {
@@ -431,22 +534,54 @@ app.MapPost("/generate", async (GenerateRequest? body, NpgsqlDataSource ds) =>
 })
     .WithTags("Game data")
     .WithSummary("Generate a character sheet for class_id + race_id (race must be allowed for class).")
-    .Accepts<GenerateRequest>("application/json");
+    .Accepts<GenerateRequest>("application/json")
+	.RequireAuthorization();
 
 app.Run();
 
 // Required for WebApplicationFactory<Program> in integration tests.
 public partial class Program;
 
-public sealed record StatRecord(int Id, string Name, int BaseValue);
+public partial class Program
+{
+    internal static async Task<IResult> GetAbilitiesResultAsync(
+        NpgsqlDataSource ds,
+        JsonSerializerOptions jsonOptions,
+        int? classId)
+    {
+        await using var conn = await ds.OpenConnectionAsync();
+        await using var cmd = new NpgsqlCommand(
+            """
+            SELECT id, name, description, class_id
+            FROM abilities
+            WHERE (@class_id IS NULL OR class_id = @class_id)
+            ORDER BY id
+            """,
+            conn);
+        cmd.Parameters.Add(new NpgsqlParameter<int?>("class_id", NpgsqlDbType.Integer)
+        {
+            TypedValue = classId,
+        });
 
-public sealed record PremadeQuery(
-    [property: JsonPropertyName("class_id")] int? ClassId,
-    [property: JsonPropertyName("race_id")] int? RaceId,
-    [property: JsonPropertyName("q")] string? Query,
-    [property: JsonPropertyName("limit")] int? Limit,
-    [property: JsonPropertyName("offset")] int? Offset);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            list.Add(new
+            {
+                id = reader.GetInt32(0),
+                name = reader.GetString(1),
+                desc = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                class_id = reader.GetInt32(3),
+            });
+        }
+
+        return Results.Json(list, jsonOptions);
+    }
+}
 
 public sealed record GenerateRequest(
     [property: JsonPropertyName("class_id")] int ClassId,
     [property: JsonPropertyName("race_id")] int RaceId);
+
+file sealed record StatRecord(int Id, string Name, int BaseValue);
