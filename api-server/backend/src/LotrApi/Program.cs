@@ -236,24 +236,6 @@ app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, Cancellatio
     .WithSummary("Get a single stat definition by name (case-insensitive).")
 	.RequireAuthorization();
 
-app.MapGet("/stats/{name}", async (string name, NpgsqlDataSource ds, CancellationToken cancellationToken) =>
-{
-    var stat = await GetStatByNameAsync(name, ds, cancellationToken);
-    if (stat is null)
-        return Results.NotFound();
-
-    return Results.Json(
-        new
-        {
-            stat.Id,
-            stat.Name,
-            baseValue = stat.BaseValue,
-        },
-        jsonOptions);
-})
-    .WithTags("Game data")
-    .WithSummary("Preferred single-stat lookup by name (case-insensitive).");
-
 app.MapGet("/charhealth", async (NpgsqlDataSource ds) =>
 {
     var stat = await GetStatByNameAsync("charhealth", ds);
