@@ -9,7 +9,8 @@ save it to your account.
 
 ## Architecture
 
-Three-tier, two databases, all in this repo:
+Three-tier, two databases, plus the Jurassic movie service used for sponsored
+banner ads:
 
 ```
                       ┌────────────────────┐
@@ -35,6 +36,11 @@ Three-tier, two databases, all in this repo:
 
 Both Postgres databases run in a single container (`lotr-pg`,
 `postgres:16-alpine`) on port 5432.
+
+Sponsored banner ads are loaded through the web server from the Jurassic movie
+service at `http://localhost:5080`. The Makefile starts that dependency from
+`$HOME/Developer/Project1-jurassic-park` by default. If your Jurassic repo is
+elsewhere, pass `JURASSIC_DIR=/path/to/Project1-jurassic-park`.
 
 | Layer            | Path                             | Tech                          | Default URL              |
 | ---------------- | -------------------------------- | ----------------------------- | ------------------------ |
@@ -66,10 +72,11 @@ make
 
 That single command:
 
-1. Starts (or reuses) the `lotr-pg` Postgres container.
-2. Creates the `lotr` and `lotr_users` databases if they don't exist.
-3. Applies the web-server user/sheet schema (the API server applies its own schema on startup).
-4. Boots the API server on `:5030` and the web server on `:5292` in parallel.
+1. Starts the Jurassic movie service stack (`:5080` API, `:5044` web, Postgres on host `:5433`).
+2. Starts (or reuses) the `lotr-pg` Postgres container.
+3. Creates the `lotr` and `lotr_users` databases if they don't exist.
+4. Applies the web-server user/sheet schema (the API server applies its own schema on startup).
+5. Boots the API server on `:5030` and the web server on `:5292` in parallel.
 
 Then open:
 
@@ -90,10 +97,11 @@ running so the next `make` is fast.
 ## Make targets
 
 ```
-make            Start Postgres + api-server + web-server   (alias: make up)
+make            Start Jurassic + Postgres + api-server + web-server (alias: make up)
 make dev        Run both servers (assumes db is up)
 make api        Run api-server only        → http://localhost:5030
 make web        Run web-server only        → http://localhost:5292
+make jurassic   Run Jurassic movie stack   → http://localhost:5080
 make db         Start Postgres + create dbs + apply web schema
 make db-reset   Drop and recreate both databases (destructive)
 make db-psql    Open psql against $(API_DB)
@@ -105,7 +113,9 @@ make help       Print the target list
 ```
 
 Override defaults inline if you need to, e.g. `make PG_PORT=5433 db`.
-The full list of variables is at the top of the [Makefile](Makefile).
+The full list of variables is at the top of the [Makefile](Makefile). For
+example, if the Jurassic repo is not in `$HOME/Developer/Project1-jurassic-park`,
+run `make JURASSIC_DIR=/path/to/Project1-jurassic-park`.
 
 ## Configuration
 
@@ -117,6 +127,7 @@ Defaults that the Makefile and app config agree on:
 | Postgres port     | `5432`                                  |
 | API database      | `lotr`                                  |
 | Users database    | `lotr_users`                            |
+| Jurassic API      | `http://localhost:5080`                 |
 | JWT shared secret | `Cool_Mega_Secret_Key_For_JWT_Token_Generation` (dev fallback) |
 
 The shared JWT secret is the dev fallback baked into both

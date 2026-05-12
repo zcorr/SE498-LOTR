@@ -7,35 +7,39 @@ PG_PASSWORD   ?= postgres
 PG_PORT       ?= 5432
 API_DB        ?= lotr
 WEB_DB        ?= lotr_users
+JURASSIC_DIR  ?= $(HOME)/Developer/Project1-jurassic-park
 
 API_DIR        = api-server/backend/src/LotrApi
 WEB_DIR        = web-server
 API_TEST_PROJ  = api-server/backend/src/LotrApi.Tests/LotrApi.Tests.csproj
 WEB_TEST_PROJ  = web-server.Tests/web-server.Tests.csproj
 WEB_SCHEMA_DIR = web-server/database/schema
+JURASSIC_COMPOSE = $(JURASSIC_DIR)/docker-compose.yml
 
 DOCKER_EXEC = docker exec $(PG_CONTAINER) psql -U $(PG_USER)
+DOCKER_COMPOSE ?= docker compose
 
-.PHONY: default up dev api web db db-start db-wait db-create db-apply-web-schema \
-        db-psql db-reset test down clean help
+.PHONY: default up dev api web jurassic db db-start db-wait db-create db-apply-web-schema \
+        db-psql db-reset test down jurassic-down clean help
 
 default: up
 
 help:
 	@echo "Targets:"
-	@echo "  make            Start Postgres + api-server + web-server"
+	@echo "  make            Start Jurassic + Postgres + api-server + web-server"
 	@echo "  make up         Same as default"
 	@echo "  make dev        Run both servers (assumes db is up)"
 	@echo "  make api        Run api-server only (http://localhost:5030)"
 	@echo "  make web        Run web-server only (http://localhost:5292)"
+	@echo "  make jurassic   Start Jurassic movie service stack (http://localhost:5080)"
 	@echo "  make db         Start Postgres + create dbs + apply web schema"
 	@echo "  make db-reset   Drop and recreate both databases"
 	@echo "  make db-psql    Open psql against \$$(API_DB) (override: make db-psql DB=lotr_users)"
 	@echo "  make test       Run all tests (LotrApi.Tests requires Docker)"
-	@echo "  make down       Stop and remove the Postgres container"
+	@echo "  make down       Stop LOTR Postgres and the Jurassic stack"
 	@echo "  make clean      Stop containers and remove build artifacts"
 
-up: db dev
+up: jurassic db dev
 
 # Run api-server and web-server in parallel. Trap forwards Ctrl-C to both.
 dev:
@@ -50,6 +54,13 @@ api:
 
 web:
 	cd $(WEB_DIR) && dotnet run
+
+jurassic:
+	@if [ ! -f "$(JURASSIC_COMPOSE)" ]; then \
+	  echo "Jurassic compose file not found at $(JURASSIC_COMPOSE). Override with: make JURASSIC_DIR=/path/to/Project1-jurassic-park"; \
+	  exit 1; \
+	fi
+	$(DOCKER_COMPOSE) -f "$(JURASSIC_COMPOSE)" up --build -d postgres movieservice web
 
 db: db-start db-wait db-create db-apply-web-schema
 
@@ -103,6 +114,12 @@ test:
 down:
 	-docker stop $(PG_CONTAINER) 2>/dev/null
 	-docker rm $(PG_CONTAINER) 2>/dev/null
+	-$(MAKE) --no-print-directory jurassic-down
+
+jurassic-down:
+	@if [ -f "$(JURASSIC_COMPOSE)" ]; then \
+	  $(DOCKER_COMPOSE) -f "$(JURASSIC_COMPOSE)" down; \
+	fi
 
 clean: down
 	dotnet clean $(API_DIR)
