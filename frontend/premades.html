@@ -475,8 +475,9 @@
             <button class="view-btn">View Sheet</button>
           `;
 
+          const { id: _premadeId, ...premadeRest } = c;
           const sheetPayload = {
-            ...c,
+            ...premadeRest,
             classId: c.classId ?? c.class_id,
             raceId: c.raceId ?? c.race_id,
             class: classLabel,
