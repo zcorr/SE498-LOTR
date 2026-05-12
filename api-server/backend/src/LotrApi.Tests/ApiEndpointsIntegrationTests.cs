@@ -355,6 +355,51 @@ public class ApiEndpointsIntegrationTests : IClassFixture<LotrApiPostgresFixture
     }
 
     [Fact]
+    public async Task GetPremades_CombinesClassAndRaceFilters()
+    {
+        // Warriors (class_id=1) who are Human (race_id=2): Aragorn, Boromir → 2 results
+        var response = await _client.GetAsync("/premades?class_id=1&race_id=2");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(2, root.GetProperty("total").GetInt32());
+
+        foreach (var item in root.GetProperty("items").EnumerateArray())
+        {
+            Assert.Equal(1, item.GetProperty("class_id").GetInt32());
+            Assert.Equal(2, item.GetProperty("race_id").GetInt32());
+        }
+    }
+
+    [Fact]
+    public async Task GetPremades_CombinesClassAndSearchFilters()
+    {
+        // Istari (class_id=2) with "sar" in the name: Saruman the White → 1 result
+        var response = await _client.GetAsync("/premades?class_id=2&q=sar");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(1, root.GetProperty("total").GetInt32());
+        var item = Assert.Single(root.GetProperty("items").EnumerateArray());
+        Assert.Equal("Saruman the White", item.GetProperty("name").GetString());
+        Assert.Equal(2, item.GetProperty("class_id").GetInt32());
+    }
+
+    [Fact]
+    public async Task GetPremades_SearchWithNoMatch_ReturnsEmptyItemsAndZeroTotal()
+    {
+        var response = await _client.GetAsync("/premades?q=zzznomatch");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        Assert.Equal(0, root.GetProperty("total").GetInt32());
+        Assert.Equal(0, root.GetProperty("items").GetArrayLength());
+    }
+
+    [Fact]
     public async Task GetPremades_PaginationBeyondTotal_ReturnsEmptyItemsAndOriginalTotal()
     {
         var response = await _client.GetAsync("/premades?limit=5&offset=100");
