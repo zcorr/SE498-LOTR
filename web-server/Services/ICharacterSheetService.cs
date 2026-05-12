@@ -1,5 +1,12 @@
 namespace web_server.Services;
 
+public class AttackEntry
+{
+    public string Name { get; set; } = string.Empty;
+    public string AtkBonus { get; set; } = string.Empty;
+    public string Damage { get; set; } = string.Empty;
+}
+
 public interface ICharacterSheetService
 {
     Task<int> SaveSheetAsync(int userId, SaveSheetRequest sheet);
@@ -25,6 +32,7 @@ public class SaveSheetRequest
     public string Flaws { get; set; } = string.Empty;
     public string Equipment { get; set; } = string.Empty;
     public string FeaturesTraits { get; set; } = string.Empty;
+    public List<AttackEntry> Attacks { get; set; } = new();
     public Dictionary<string, int> Stats { get; set; } = new();
 }
 
@@ -40,6 +48,7 @@ public class UpdateSheetRequest
     public string Flaws { get; set; } = string.Empty;
     public string Equipment { get; set; } = string.Empty;
     public string FeaturesTraits { get; set; } = string.Empty;
+    public List<AttackEntry> Attacks { get; set; } = new();
     public Dictionary<string, int> Stats { get; set; } = new();
 }
 
@@ -66,4 +75,5 @@ public class CharacterSheetDetail : CharacterSheetSummary
     public string Flaws { get; set; } = string.Empty;
     public string Equipment { get; set; } = string.Empty;
     public string FeaturesTraits { get; set; } = string.Empty;
+    public List<AttackEntry> Attacks { get; set; } = new();
 }

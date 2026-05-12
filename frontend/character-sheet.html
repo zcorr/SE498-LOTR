@@ -1361,6 +1361,11 @@
     const failure = document.getElementById('save-failure-msg');
     if (failure) failure.remove();
 
+    // Explicitly remove all edit inputs/textareas before repopulating so that
+    // Safari (which doesn't always rerender when textContent replaces form elements)
+    // gets a clean DOM state.
+    document.querySelectorAll('[data-edit-field]').forEach(el => el.remove());
+
     populateSheet(sheet);
     loadClassAbilities(sheet);
   }
@@ -1520,7 +1525,7 @@
         sheet.attacks          = attacks;
         sheet.stats            = newStats;
         if (!sheet.id && result.id) sheet.id = result.id;
-        sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
+        try { sessionStorage.setItem('currentSheet', JSON.stringify(sheet)); } catch(e) { /* ignore storage errors */ }
         exitEditMode();
         showSaveFeedback(true);
       } else if (resp && resp.status === 401) {
