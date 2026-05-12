@@ -19,8 +19,9 @@ public class CharacterSheetService : ICharacterSheetService
             """
             INSERT INTO character_sheets
               (user_id, name, class_name, race_name, class_description, race_modifiers,
-               background, player_name, alignment, personality_traits, ideals, bonds, flaws, stats)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb)
+               background, player_name, alignment, personality_traits, ideals, bonds, flaws,
+               equipment, features_traits, stats)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb)
             RETURNING id
             """,
             conn);
@@ -38,6 +39,8 @@ public class CharacterSheetService : ICharacterSheetService
         cmd.Parameters.AddWithValue(sheet.Ideals);
         cmd.Parameters.AddWithValue(sheet.Bonds);
         cmd.Parameters.AddWithValue(sheet.Flaws);
+        cmd.Parameters.AddWithValue(sheet.Equipment);
+        cmd.Parameters.AddWithValue(sheet.FeaturesTraits);
         cmd.Parameters.AddWithValue(JsonSerializer.Serialize(sheet.Stats));
 
         var result = await cmd.ExecuteScalarAsync();
@@ -86,7 +89,7 @@ public class CharacterSheetService : ICharacterSheetService
             """
             SELECT id, name, class_name, race_name, class_description, race_modifiers,
                    background, player_name, alignment, personality_traits, ideals, bonds, flaws,
-                   stats::text, created_at
+                   equipment, features_traits, stats::text, created_at
             FROM character_sheets
             WHERE id = $1 AND user_id = $2
             """,
@@ -98,7 +101,7 @@ public class CharacterSheetService : ICharacterSheetService
         if (!await reader.ReadAsync())
             return null;
 
-        var statsText = reader.GetString(13);
+        var statsText = reader.GetString(15);
         var stats = JsonSerializer.Deserialize<Dictionary<string, int>>(statsText)
                     ?? new Dictionary<string, int>();
 
@@ -117,8 +120,10 @@ public class CharacterSheetService : ICharacterSheetService
             Ideals = reader.IsDBNull(10) ? "" : reader.GetString(10),
             Bonds = reader.IsDBNull(11) ? "" : reader.GetString(11),
             Flaws = reader.IsDBNull(12) ? "" : reader.GetString(12),
+            Equipment = reader.IsDBNull(13) ? "" : reader.GetString(13),
+            FeaturesTraits = reader.IsDBNull(14) ? "" : reader.GetString(14),
             Stats = stats,
-            CreatedAt = reader.GetDateTime(14),
+            CreatedAt = reader.GetDateTime(16),
         };
     }
 
@@ -130,7 +135,7 @@ public class CharacterSheetService : ICharacterSheetService
             UPDATE character_sheets
             SET name=$3, background=$4, player_name=$5, alignment=$6,
                 personality_traits=$7, ideals=$8, bonds=$9, flaws=$10,
-                stats=$11::jsonb
+                equipment=$11, features_traits=$12, stats=$13::jsonb
             WHERE id=$1 AND user_id=$2
             """,
             conn);
@@ -145,6 +150,8 @@ public class CharacterSheetService : ICharacterSheetService
         cmd.Parameters.AddWithValue(update.Ideals);
         cmd.Parameters.AddWithValue(update.Bonds);
         cmd.Parameters.AddWithValue(update.Flaws);
+        cmd.Parameters.AddWithValue(update.Equipment);
+        cmd.Parameters.AddWithValue(update.FeaturesTraits);
         cmd.Parameters.AddWithValue(JsonSerializer.Serialize(update.Stats));
 
         var rowsAffected = await cmd.ExecuteNonQueryAsync();

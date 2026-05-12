@@ -23,6 +23,8 @@ public class SaveSheetRequest
     public string Ideals { get; set; } = string.Empty;
     public string Bonds { get; set; } = string.Empty;
     public string Flaws { get; set; } = string.Empty;
+    public string Equipment { get; set; } = string.Empty;
+    public string FeaturesTraits { get; set; } = string.Empty;
     public Dictionary<string, int> Stats { get; set; } = new();
 }
 
@@ -36,6 +38,8 @@ public class UpdateSheetRequest
     public string Ideals { get; set; } = string.Empty;
     public string Bonds { get; set; } = string.Empty;
     public string Flaws { get; set; } = string.Empty;
+    public string Equipment { get; set; } = string.Empty;
+    public string FeaturesTraits { get; set; } = string.Empty;
     public Dictionary<string, int> Stats { get; set; } = new();
 }
 
@@ -60,4 +64,6 @@ public class CharacterSheetDetail : CharacterSheetSummary
     public string Ideals { get; set; } = string.Empty;
     public string Bonds { get; set; } = string.Empty;
     public string Flaws { get; set; } = string.Empty;
+    public string Equipment { get; set; } = string.Empty;
+    public string FeaturesTraits { get; set; } = string.Empty;
 }

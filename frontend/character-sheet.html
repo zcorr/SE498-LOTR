@@ -1294,6 +1294,7 @@
       { id: 'trait-ideals',      field: 'ideals' },
       { id: 'trait-bonds',       field: 'bonds' },
       { id: 'trait-flaws',       field: 'flaws' },
+      { id: 'features-traits',   field: 'featuresTraits' },
     ];
     traitFields.forEach(({ id, field }) => {
       const el = document.getElementById(id);
@@ -1306,6 +1307,18 @@
       el.textContent = '';
       el.appendChild(textarea);
     });
+
+    const equipEl = document.getElementById('equipment-content');
+    if (equipEl) {
+      const val = sheet.equipment ?? '';
+      const textarea = document.createElement('textarea');
+      textarea.className = 'edit-textarea';
+      textarea.dataset.editField = 'equipment';
+      textarea.value = (val === '—' || !val) ? '' : val;
+      textarea.style.minHeight = '60px';
+      equipEl.textContent = '';
+      equipEl.appendChild(textarea);
+    }
   }
 
   function exitEditMode() {
@@ -1422,6 +1435,8 @@
       ideals:           g('ideals'),
       bonds:            g('bonds'),
       flaws:            g('flaws'),
+      equipment:        g('equipment'),
+      featuresTraits:   g('featuresTraits'),
       stats:            newStats,
     };
 
@@ -1450,6 +1465,8 @@
             ideals:           body.ideals,
             bonds:            body.bonds,
             flaws:            body.flaws,
+            equipment:        body.equipment,
+            featuresTraits:   body.featuresTraits,
             stats:            newStats,
           }),
         });
@@ -1465,6 +1482,8 @@
         sheet.ideals           = body.ideals;
         sheet.bonds            = body.bonds;
         sheet.flaws            = body.flaws;
+        sheet.equipment        = body.equipment;
+        sheet.featuresTraits   = body.featuresTraits;
         sheet.stats            = newStats;
         if (!sheet.id && result.id) sheet.id = result.id;
         sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
