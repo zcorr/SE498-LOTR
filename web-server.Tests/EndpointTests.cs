@@ -121,8 +121,14 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
                 .ReturnsAsync(true);
 
             MockApiClient
-                .Setup(x => x.GetPremadesAsync(It.IsAny<string>()))
-                .ReturnsAsync(new List<PremadeDTO>());
+                .Setup(x => x.GetPremadesAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<int?>(),
+                    It.IsAny<int?>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<int?>(),
+                    It.IsAny<int?>()))
+                .ReturnsAsync(new PremadeListResponseDTO());
 
             MockApiClient
                 .Setup(x => x.GetRacesAsync(It.IsAny<string>()))
@@ -158,8 +164,12 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
                 .ReturnsAsync("{\"name\":\"strength\",\"baseValue\":10}");
 
             MockApiClient
-                .Setup(x => x.GetNamesAsync(It.IsAny<string>()))
-                .ReturnsAsync("[\"Aragorn\",\"Legolas\"]");
+                .Setup(x => x.GetNamesAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<int?>(),
+                    It.IsAny<int?>(),
+                    It.IsAny<string?>()))
+                .ReturnsAsync(new List<string> { "Aragorn", "Legolas" });
         });
     }
 }

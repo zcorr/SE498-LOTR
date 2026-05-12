@@ -869,6 +869,8 @@
   function normalizeSheetData(data) {
     return {
       ...data,
+      classId: data?.classId ?? data?.class_id,
+      raceId: data?.raceId ?? data?.race_id,
       class: data?.class ?? data?.className,
       race: data?.race ?? data?.raceName,
     };
