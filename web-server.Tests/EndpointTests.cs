@@ -802,6 +802,11 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
         });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        // Restore the default so subsequent tests aren't affected
+        _factory.MockSheetService
+            .Setup(x => x.UpdateSheetAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<UpdateSheetRequest>()))
+            .ReturnsAsync(true);
     }
 
     [Fact]
