@@ -100,6 +100,24 @@ public class CharacterSheetApiController : ControllerBase
         return Ok(sheet);
     }
 
+    // PUT /api/character/sheets/{id} — update a saved character sheet
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateSheet(int id, [FromBody] UpdateSheetRequest request)
+    {
+        var userId = GetUserIdFromCookie();
+        if (userId == null)
+            return Unauthorized("No valid authentication token found");
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest("Character name is required");
+
+        var updated = await _sheetService.UpdateSheetAsync(id, userId.Value, request);
+        if (!updated)
+            return NotFound();
+
+        return Ok(new { id, message = "Character updated" });
+    }
+
     // DELETE /api/character/sheets/{id} — delete a sheet
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteSheet(int id)
