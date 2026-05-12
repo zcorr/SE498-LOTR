@@ -66,6 +66,23 @@ public class PremadeApiController : ControllerBase
         return Ok(premades);
     }
 
+    [HttpGet("names")]
+    public async Task<IActionResult> GetNames(
+        [FromQuery(Name = "class_id")] int? classId,
+        [FromQuery(Name = "race_id")] int? raceId,
+        [FromQuery(Name = "q")] string? query)
+    {
+        var token = Request.Cookies["AuthToken"];
+        if (string.IsNullOrWhiteSpace(token))
+            return Unauthorized("No authentication token found");
+
+        var names = await _apiClient.GetNamesAsync(token, classId, raceId, query);
+        if (names == null)
+            return StatusCode(500, "Failed to fetch premade names");
+
+        return Ok(names);
+    }
+
     [HttpPost("select/{id}")]
     public async Task<IActionResult> SelectPremade(int id)
     {
