@@ -168,3 +168,231 @@
     width: 38px;
   }
 }
+
+/* ── Stage 2: side banners (revealed when the top banner is dismissed) ── */
+.lotr-ad-side {
+  position: fixed;
+  top: 50%;
+  z-index: 9998;
+  width: 200px;
+  padding: 2.4rem 1rem 1rem;
+  background: linear-gradient(160deg, #1a1f14 0%, #2a2010 60%, #3b2a10 100%);
+  border: 2px solid #8b6914;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+  font-family: 'Georgia', serif;
+  color: #f5ead6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28),
+              opacity 0.3s ease-out;
+  pointer-events: auto;
+}
+
+.lotr-ad-side--left  { left: 14px;  transform: translate(-130%, -50%); }
+.lotr-ad-side--right { right: 14px; transform: translate( 130%, -50%); }
+.lotr-ad-side--left.is-visible,
+.lotr-ad-side--right.is-visible { transform: translate(0, -50%); }
+
+.lotr-ad-side__label {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #d4af4a;
+}
+
+.lotr-ad-side__close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #f5ead6;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+  border-radius: 4px;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+
+.lotr-ad-side__close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lotr-ad-side__poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid rgba(245, 234, 214, 0.35);
+  background: #0d0d0d;
+}
+
+.lotr-ad-side__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.lotr-ad-side__cta {
+  display: inline-block;
+  padding: 0.4rem 0.95rem;
+  margin-top: 0.15rem;
+  border-radius: 999px;
+  background: #d4af4a;
+  color: #1a1f14;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border: 1px solid #b38b1d;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+.lotr-ad-side__cta:hover {
+  background: #e6c569;
+  color: #1a1f14;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .lotr-ad-side { display: none; }
+}
+
+/* ── Stage 3: full-screen takeover (revealed after side banners dismissed) ── */
+.lotr-ad-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 8, 5, 0.88);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  font-family: 'Georgia', serif;
+  color: #f5ead6;
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+}
+
+.lotr-ad-fullscreen.is-visible { opacity: 1; }
+
+.lotr-ad-fullscreen__card {
+  position: relative;
+  width: min(92vw, 520px);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: linear-gradient(150deg, #1a1f14 0%, #2a2010 60%, #3b2a10 100%);
+  border: 3px solid #8b6914;
+  border-radius: 10px;
+  padding: 2.6rem 2rem 2rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  transform: scale(0.92);
+  transition: transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.lotr-ad-fullscreen.is-visible .lotr-ad-fullscreen__card { transform: scale(1); }
+
+.lotr-ad-fullscreen__close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #f5ead6;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  border-radius: 4px;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+
+.lotr-ad-fullscreen__close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lotr-ad-fullscreen__label {
+  display: inline-block;
+  padding: 0.25rem 0.85rem;
+  background: #8b6914;
+  color: #fff8e7;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  margin-bottom: 1rem;
+}
+
+.lotr-ad-fullscreen__poster {
+  display: block;
+  margin: 0 auto 1rem;
+  width: min(60vw, 220px);
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid rgba(245, 234, 214, 0.35);
+  background: #0d0d0d;
+}
+
+.lotr-ad-fullscreen__kicker {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #d4af4a;
+  margin: 0 0 0.3rem;
+}
+
+.lotr-ad-fullscreen__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  line-height: 1.15;
+}
+
+.lotr-ad-fullscreen__sub {
+  font-size: 0.92rem;
+  font-style: italic;
+  color: rgba(245, 234, 214, 0.78);
+  margin: 0 0 1.4rem;
+}
+
+.lotr-ad-fullscreen__cta {
+  display: inline-block;
+  padding: 0.65rem 1.6rem;
+  border-radius: 999px;
+  background: #d4af4a;
+  color: #1a1f14;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border: 1px solid #b38b1d;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+.lotr-ad-fullscreen__cta:hover {
+  background: #e6c569;
+  color: #1a1f14;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
