@@ -420,9 +420,10 @@
           stats: mappedStats,
         };
 
-        // Save to database so it persists for this user
+        // Save to database so it persists for this user; capture id for edit mode
+        let savedId;
         try {
-          await fetch(`${API_BASE}/character/sheets`, {
+          const saveResp = await fetch(`${API_BASE}/character/sheets`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -431,13 +432,25 @@
               raceName: sheet.raceName,
               classDescription: sheet.classDescription || '',
               raceModifiers: sheet.raceModifiers || '',
+              background: '',
+              playerName: '',
+              alignment: '',
+              personalityTraits: '',
+              ideals: '',
+              bonds: '',
+              flaws: '',
               stats: sheet.stats,
             }),
           });
+          if (saveResp.ok) {
+            const saved = await saveResp.json();
+            savedId = saved.id;
+          }
         } catch (saveErr) {
           console.warn('Could not save character to database:', saveErr);
         }
 
+        if (savedId) sheetData.id = savedId;
         sessionStorage.setItem('currentSheet', JSON.stringify(sheetData));
         window.location.href = '/character/sheet';
       } else if (response.status === 401) {
