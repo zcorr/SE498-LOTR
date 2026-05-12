@@ -178,10 +178,33 @@ Premades and base stats are seeded by [006_seed.sql](api-server/backend/src/data
 | `/character/sheet`           | View a generated/saved sheet (auth required)     |
 | `/my-characters`             | List of saved sheets (auth required)             |
 | `/api/auth/{login,logout,register}` | JSON auth endpoints (sets `AuthToken` cookie) |
-| `/api/character/sheets`      | CRUD for the user's saved sheets                 |
+| `/api/character/sheets`      | `POST` save new sheet, `GET` list, `PUT /{id}` update, `DELETE /{id}` delete |
 | `/api/character/{races,classes,abilities,stats,generate}` | Authenticated proxy to the API server |
 | `/api/gamedata/*`            | Mirror endpoints over the same API client        |
 | `/api/premade/{list,select/{id}}` | Premade browse + select                     |
+
+## Character sheet editor
+
+Saved character sheets are fully editable after creation. An **Edit** button appears on the sheet view for any sheet owned by the logged-in user (including premade characters that have been saved as a copy).
+
+Clicking **Edit** enters edit mode, which converts the following read-only fields into inputs or textareas:
+
+- Background, Player Name, Alignment
+- Personality Traits, Ideals, Bonds, Flaws
+- Equipment
+- Features & Traits (user-authored text; class ability descriptions are appended automatically outside of edit mode)
+- Attacks & Spellcasting (up to 6 rows: Name / Atk Bonus / Damage)
+
+**Save** issues a `PUT /api/character/sheets/{id}` for existing sheets, or a `POST /api/character/sheets` when saving a premade as a new copy. On success the sheet view is repopulated from the returned data without a page reload.
+
+**Premade characters** always show the Edit button. Selecting a premade and clicking Edit will save it as a new sheet in your account before applying changes, leaving the original premade untouched.
+
+The three new columns are added by schema migrations applied automatically on `make db`:
+
+| Migration                              | Change                                                               |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `004_add_sheet_equipment_features.sql` | Adds `equipment` and `features_traits` columns to `character_sheets` |
+| `005_add_sheet_attacks.sql`            | Adds `attacks` JSONB column to `character_sheets`                    |
 
 ## Tests
 
