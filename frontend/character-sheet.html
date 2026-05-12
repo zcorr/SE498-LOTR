@@ -981,6 +981,7 @@
 
   const sheet = normalizeSheetData(raw ? JSON.parse(raw) : DEV_PREVIEW);
   let editMode = false;
+  if (!sheet.id) document.getElementById('edit-btn').style.display = 'none';
 
   // ── Helpers ───────────────────────────────────────────────
   function normalizeSheetData(data) {
