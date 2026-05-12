@@ -38,9 +38,11 @@ Both Postgres databases run in a single container (`lotr-pg`,
 `postgres:16-alpine`) on port 5432.
 
 Sponsored banner ads are loaded through the web server from the Jurassic movie
-service at `http://localhost:5080`. The Makefile starts that dependency from
-`$HOME/Developer/Project1-jurassic-park` by default. If your Jurassic repo is
-elsewhere, pass `JURASSIC_DIR=/path/to/Project1-jurassic-park`.
+service at `http://localhost:5080`. The Jurassic project is included as a Git
+submodule at [external/Project1-jurassic-park](external/Project1-jurassic-park),
+and `make` initializes it automatically on a fresh checkout if needed. If you
+want to use a separate local checkout, pass
+`JURASSIC_DIR=/path/to/Project1-jurassic-park`.
 
 | Layer            | Path                             | Tech                          | Default URL              |
 | ---------------- | -------------------------------- | ----------------------------- | ------------------------ |
@@ -52,11 +54,12 @@ elsewhere, pass `JURASSIC_DIR=/path/to/Project1-jurassic-park`.
 
 ## Prerequisites
 
-You need three things on your machine:
+You need four things on your machine:
 
 1. **[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)** — verify with `dotnet --version` (should print `10.x.x`).
 2. **Docker** (Desktop or Engine) — used to run Postgres and required by the API integration tests. Verify with `docker info`.
-3. **make** — preinstalled on macOS / most Linux distros. On Windows use WSL or install via [chocolatey](https://chocolatey.org/) (`choco install make`).
+3. **Git** — needed to initialize the Jurassic submodule on first run.
+4. **make** — preinstalled on macOS / most Linux distros. On Windows use WSL or install via [chocolatey](https://chocolatey.org/) (`choco install make`).
 
 Optional: `psql` on your `PATH` if you want to poke at the databases outside of `make db-psql`.
 
@@ -72,11 +75,12 @@ make
 
 That single command:
 
-1. Starts the Jurassic movie service stack (`:5080` API, `:5044` web, Postgres on host `:5433`).
-2. Starts (or reuses) the `lotr-pg` Postgres container.
-3. Creates the `lotr` and `lotr_users` databases if they don't exist.
-4. Applies the web-server user/sheet schema (the API server applies its own schema on startup).
-5. Boots the API server on `:5030` and the web server on `:5292` in parallel.
+1. Initializes the Jurassic submodule if needed.
+2. Starts the Jurassic movie service stack (`:5080` API, `:5044` web, Postgres on host `:5433`).
+3. Starts (or reuses) the `lotr-pg` Postgres container.
+4. Creates the `lotr` and `lotr_users` databases if they don't exist.
+5. Applies the web-server user/sheet schema (the API server applies its own schema on startup).
+6. Boots the API server on `:5030` and the web server on `:5292` in parallel.
 
 Then open:
 
@@ -101,21 +105,21 @@ make            Start Jurassic + Postgres + api-server + web-server (alias: make
 make dev        Run both servers (assumes db is up)
 make api        Run api-server only        → http://localhost:5030
 make web        Run web-server only        → http://localhost:5292
-make jurassic   Run Jurassic movie stack   → http://localhost:5080
+make jurassic   Init/run Jurassic stack    → http://localhost:5080
 make db         Start Postgres + create dbs + apply web schema
 make db-reset   Drop and recreate both databases (destructive)
 make db-psql    Open psql against $(API_DB)
                   override with: make db-psql DB=lotr_users
 make test       Run all tests (LotrApi.Tests requires Docker)
-make down       Stop and remove the Postgres container
+make down       Stop LOTR Postgres and the Jurassic stack
 make clean      Stop containers and remove .NET build artifacts
 make help       Print the target list
 ```
 
 Override defaults inline if you need to, e.g. `make PG_PORT=5433 db`.
 The full list of variables is at the top of the [Makefile](Makefile). For
-example, if the Jurassic repo is not in `$HOME/Developer/Project1-jurassic-park`,
-run `make JURASSIC_DIR=/path/to/Project1-jurassic-park`.
+example, to use a separate Jurassic checkout instead of the submodule, run
+`make JURASSIC_DIR=/path/to/Project1-jurassic-park`.
 
 ## Configuration
 

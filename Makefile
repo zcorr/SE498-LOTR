@@ -7,7 +7,8 @@ PG_PASSWORD   ?= postgres
 PG_PORT       ?= 5432
 API_DB        ?= lotr
 WEB_DB        ?= lotr_users
-JURASSIC_DIR  ?= $(HOME)/Developer/Project1-jurassic-park
+JURASSIC_SUBMODULE_PATH = external/Project1-jurassic-park
+JURASSIC_DIR  ?= $(CURDIR)/$(JURASSIC_SUBMODULE_PATH)
 
 API_DIR        = api-server/backend/src/LotrApi
 WEB_DIR        = web-server
@@ -19,7 +20,7 @@ JURASSIC_COMPOSE = $(JURASSIC_DIR)/docker-compose.yml
 DOCKER_EXEC = docker exec $(PG_CONTAINER) psql -U $(PG_USER)
 DOCKER_COMPOSE ?= docker compose
 
-.PHONY: default up dev api web jurassic db db-start db-wait db-create db-apply-web-schema \
+.PHONY: default up dev api web jurassic jurassic-init db db-start db-wait db-create db-apply-web-schema \
         db-psql db-reset test down jurassic-down clean help
 
 default: up
@@ -56,11 +57,18 @@ web:
 	cd $(WEB_DIR) && dotnet run
 
 jurassic:
+	@$(MAKE) --no-print-directory jurassic-init
+	$(DOCKER_COMPOSE) -f "$(JURASSIC_COMPOSE)" up --build -d postgres movieservice web
+
+jurassic-init:
+	@if [ ! -f "$(JURASSIC_COMPOSE)" ] && [ "$(JURASSIC_DIR)" = "$(CURDIR)/$(JURASSIC_SUBMODULE_PATH)" ]; then \
+	  echo ">> initializing Jurassic submodule"; \
+	  git submodule update --init --recursive -- "$(JURASSIC_SUBMODULE_PATH)"; \
+	fi
 	@if [ ! -f "$(JURASSIC_COMPOSE)" ]; then \
-	  echo "Jurassic compose file not found at $(JURASSIC_COMPOSE). Override with: make JURASSIC_DIR=/path/to/Project1-jurassic-park"; \
+	  echo "Jurassic compose file not found at $(JURASSIC_COMPOSE). Run 'git submodule update --init --recursive' or override with: make JURASSIC_DIR=/path/to/Project1-jurassic-park"; \
 	  exit 1; \
 	fi
-	$(DOCKER_COMPOSE) -f "$(JURASSIC_COMPOSE)" up --build -d postgres movieservice web
 
 db: db-start db-wait db-create db-apply-web-schema
 
