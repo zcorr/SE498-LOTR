@@ -104,6 +104,9 @@ public class CharacterSheetService : ICharacterSheetService
         };
     }
 
+    public Task<bool> UpdateSheetAsync(int sheetId, int userId, UpdateSheetRequest update) =>
+        Task.FromResult(false);
+
     public async Task<bool> DeleteSheetAsync(int sheetId, int userId)
     {
         await using var conn = await _db.OpenConnectionAsync();
