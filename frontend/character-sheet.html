@@ -1319,6 +1319,27 @@
       equipEl.textContent = '';
       equipEl.appendChild(textarea);
     }
+
+    const attacksList = document.getElementById('attacks-list');
+    if (attacksList) {
+      attacksList.innerHTML = '';
+      const existingAttacks = sheet.attacks ?? [];
+      for (let i = 0; i < 6; i++) {
+        const a = existingAttacks[i] ?? {};
+        const row = document.createElement('div');
+        row.className = 'attack-row';
+        ['name', 'atkBonus', 'damage'].forEach(col => {
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'edit-input';
+          inp.style.fontSize = '0.78rem';
+          inp.dataset.editField = `attack-${i}-${col}`;
+          inp.value = a[col] ?? '';
+          row.appendChild(inp);
+        });
+        attacksList.appendChild(row);
+      }
+    }
   }
 
   function exitEditMode() {
@@ -1426,6 +1447,16 @@
     const hpInput = document.querySelector('[data-edit-field="stat-charhealth"]');
     if (hpInput) newStats.charhealth = parseInt(hpInput.value);
 
+    const attacks = [];
+    for (let i = 0; i < 6; i++) {
+      const name     = (document.querySelector(`[data-edit-field="attack-${i}-name"]`)?.value ?? '').trim();
+      const atkBonus = (document.querySelector(`[data-edit-field="attack-${i}-atkBonus"]`)?.value ?? '').trim();
+      const damage   = (document.querySelector(`[data-edit-field="attack-${i}-damage"]`)?.value ?? '').trim();
+      if (name || atkBonus || damage) {
+        attacks.push({ name, atkBonus, damage });
+      }
+    }
+
     const body = {
       name:             g('name').trim(),
       background:       g('background').trim(),
@@ -1437,6 +1468,7 @@
       flaws:            g('flaws'),
       equipment:        g('equipment'),
       featuresTraits:   g('featuresTraits'),
+      attacks:          attacks,
       stats:            newStats,
     };
 
@@ -1467,6 +1499,7 @@
             flaws:            body.flaws,
             equipment:        body.equipment,
             featuresTraits:   body.featuresTraits,
+            attacks:          attacks,
             stats:            newStats,
           }),
         });
@@ -1484,6 +1517,7 @@
         sheet.flaws            = body.flaws;
         sheet.equipment        = body.equipment;
         sheet.featuresTraits   = body.featuresTraits;
+        sheet.attacks          = attacks;
         sheet.stats            = newStats;
         if (!sheet.id && result.id) sheet.id = result.id;
         sessionStorage.setItem('currentSheet', JSON.stringify(sheet));
