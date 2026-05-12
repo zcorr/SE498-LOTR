@@ -40,6 +40,10 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
     // SeedDefaultUserAsync() call doesn't try to connect to PostgreSQL.
     public Mock<IAuthService> MockAuthService { get; } = new();
 
+    // The mock that replaces the real Jurassic ads HTTP client so tests
+    // don't try to reach the external Jurassic movies service.
+    public Mock<IJurassicAdsClient> MockJurassicAdsClient { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -64,6 +68,23 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
 
             // ── Register the mock ──
             services.AddSingleton<ILotrApiClient>(MockApiClient.Object);
+
+            // ── Remove the real IJurassicAdsClient registration ──
+            // Program.cs registers it via AddHttpClient<IJurassicAdsClient,
+            // JurassicAdsClient>(...). We drop those and substitute the mock
+            // so banner-ads tests don't depend on the external service.
+            var jurassicDescriptors = services
+                .Where(d => d.ServiceType == typeof(IJurassicAdsClient)
+                         || (d.ImplementationType != null
+                             && d.ImplementationType == typeof(JurassicAdsClient)))
+                .ToList();
+            foreach (var d in jurassicDescriptors)
+                services.Remove(d);
+            services.AddSingleton<IJurassicAdsClient>(MockJurassicAdsClient.Object);
+
+            MockJurassicAdsClient
+                .Setup(x => x.GetPostersAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<JurassicMoviePoster>());
 
             // ── Replace IAuthService with a mock ──
             // The real AuthService talks to PostgreSQL on startup
