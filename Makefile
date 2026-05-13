@@ -23,7 +23,7 @@ JURASSIC_COMPOSE = $(JURASSIC_DIR)/docker-compose.yml
 DOCKER_EXEC = docker exec $(PG_CONTAINER) psql -U $(PG_USER)
 DOCKER_COMPOSE ?= docker compose
 
-.PHONY: default up dev api web jurassic jurassic-init db db-start db-wait db-create db-apply-web-schema \
+.PHONY: default up lotr dev api web jurassic jurassic-init db db-start db-wait db-create db-apply-web-schema \
         db-psql db-reset test down dev-down jurassic-down clean help
 
 API_PORT ?= 5030
@@ -35,6 +35,7 @@ help:
 	@echo "Targets:"
 	@echo "  make            Start Jurassic + Postgres + api-server + web-server"
 	@echo "  make up         Same as default"
+	@echo "  make lotr       Start only LOTR Postgres + api-server + web-server"
 	@echo "  make dev        Run both servers (assumes db is up)"
 	@echo "  make api        Run api-server only (http://localhost:5030)"
 	@echo "  make web        Run web-server only (http://localhost:5292)"
@@ -47,6 +48,10 @@ help:
 	@echo "  make clean      Stop containers and remove build artifacts"
 
 up: jurassic db dev
+
+# Start only the LOTR-owned stack. Use this when Jurassic is not needed or is
+# supplied separately by another group.
+lotr: db dev
 
 # Run api-server and web-server in parallel. Trap forwards Ctrl-C to both.
 dev:

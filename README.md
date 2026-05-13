@@ -98,14 +98,71 @@ You can also register a new account from the login page. Press **Ctrl-C** in the
 terminal running `make` to stop both servers; the Postgres container keeps
 running so the next `make` is fast.
 
+If you only need the LOTR-owned app/API/database stack and do not want to start
+Jurassic, run:
+
+```bash
+make lotr
+```
+
+## Docker quick start
+
+The MVC web app can be built and run without a local .NET SDK by using Docker
+from the repo root:
+
+```bash
+docker build -f web-server/Dockerfile -t lotr-web .
+```
+
+Run the full local stack with Docker Compose:
+
+```bash
+docker compose -f compose.yaml up --build
+```
+
+Then open:
+
+- **App:** http://localhost:5292/Auth/Login
+- **API health:** http://localhost:5030/health
+
+Stop the stack with:
+
+```bash
+docker compose -f compose.yaml down
+```
+
+Remove database volumes for a clean reset:
+
+```bash
+docker compose -f compose.yaml down -v
+```
+
+Run the MVC container smoke test:
+
+```bash
+./scripts/smoke-web-container.sh
+```
+
+The smoke test builds the compose stack, waits for `/Auth/Login`, checks `/`
+and `/css/site.css`, logs in with the seeded admin account, and confirms the
+authenticated `/premade` and `/character/create` routes return successful
+responses from inside the containerized MVC app.
+
+The compose setup includes the MVC app, LOTR API, and two Postgres databases.
+The Jurassic movie service is optional for this compose stack. If it is running
+on the host at `http://localhost:5081`, the MVC container reaches it through
+`http://host.docker.internal:5081`; if it is not running, banner ads are skipped
+and the app still serves the core routes.
+
 ## Make targets
 
 ```
 make            Start Jurassic + Postgres + api-server + web-server (alias: make up)
+make lotr       Start only LOTR Postgres + api-server + web-server
 make dev        Run both servers (assumes db is up)
 make api        Run api-server only        → http://localhost:5030
 make web        Run web-server only        → http://localhost:5292
-make jurassic   Init/run Jurassic stack    → http://localhost:5080
+make jurassic   Init/run Jurassic stack    → web http://localhost:5080, api http://localhost:5081
 make db         Start Postgres + create dbs + apply web schema
 make db-reset   Drop and recreate both databases (destructive)
 make db-psql    Open psql against $(API_DB)
@@ -131,7 +188,8 @@ Defaults that the Makefile and app config agree on:
 | Postgres port     | `5432`                                  |
 | API database      | `lotr`                                  |
 | Users database    | `lotr_users`                            |
-| Jurassic API      | `http://localhost:5080`                 |
+| LOTR API          | `http://localhost:5030`                 |
+| Jurassic API      | `http://localhost:5081`                 |
 | JWT shared secret | `Cool_Mega_Secret_Key_For_JWT_Token_Generation` (dev fallback) |
 
 The shared JWT secret is the dev fallback baked into both
@@ -139,7 +197,8 @@ The shared JWT secret is the dev fallback baked into both
 [api-server/backend/src/LotrApi/Program.cs](api-server/backend/src/LotrApi/Program.cs).
 Override in production via the `Jwt__Secret` environment variable, and override
 the connection strings via `ConnectionStrings__DefaultConnection` (api) and
-`ConnectionStrings__UsersConnection` (web).
+`ConnectionStrings__UsersConnection` (web). The MVC app's API dependencies can
+also be overridden with `LotrApi__BaseUrl` and `JurassicApi__BaseUrl`.
 
 ## API endpoints
 

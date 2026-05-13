@@ -10,9 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // Register API client with base address
+var lotrApiBaseUrl = builder.Configuration["LotrApi:BaseUrl"] ?? "http://localhost:5030";
 builder.Services.AddHttpClient<ILotrApiClient, LotrApiClient>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5030"); // API server URL
+    client.BaseAddress = new Uri(lotrApiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
 });
 
