@@ -91,6 +91,7 @@ public class AuthApiController : ControllerBase
         return Ok(new { message = "Login successful", token });
     }
 
+    [Authorize]
     [HttpPost("logout")]
     public IActionResult Logout()
     {
