@@ -357,6 +357,17 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
     // =========================================================================
 
     [Fact]
+    public async Task Root_WithoutAuth_RedirectsToLogin()
+    {
+        var client = CreateUnauthenticatedClient();
+
+        var response = await client.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/Auth/Login", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
     public async Task LoginPage_WithoutAuth_Returns200()
     {
         var client = CreateUnauthenticatedClient();

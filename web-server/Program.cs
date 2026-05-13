@@ -19,7 +19,7 @@ builder.Services.AddHttpClient<ILotrApiClient, LotrApiClient>(client =>
 // Jurassic movie service — used to render sponsored "banner ads" on the LOTR pages.
 // Cross-origin from the browser is blocked by the Jurassic API's CORS allow-list,
 // so the LOTR web server proxies it server-side via /api/banner-ads/movies.
-var jurassicBaseUrl = builder.Configuration["JurassicApi:BaseUrl"] ?? "http://localhost:5080";
+var jurassicBaseUrl = builder.Configuration["JurassicApi:BaseUrl"] ?? "http://localhost:5081";
 builder.Services.AddHttpClient<IJurassicAdsClient, JurassicAdsClient>(client =>
 {
     client.BaseAddress = new Uri(jurassicBaseUrl);
