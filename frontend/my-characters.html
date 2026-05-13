@@ -296,16 +296,26 @@
         grid.style.display = 'grid';
     }
 
-    function viewSheet(sheet) {
-        // Map stat keys for the character sheet page
+    async function viewSheet(sheet) {
+        // Fetch the full detail (includes text fields) before navigating
+        let detail = sheet;
+        try {
+            const resp = await fetch(`${API_BASE}/character/sheets/${sheet.id}`);
+            if (resp.ok) {
+                detail = await resp.json();
+            }
+        } catch {
+            // fall through — use summary data
+        }
+
         const statMap = {
             strength: 'STR', dexterity: 'DEX', constitution: 'CON',
             intelligence: 'INT', wisdom: 'WIS', charisma: 'CHA',
         };
 
         const mappedStats = {};
-        if (sheet.stats) {
-            for (const [key, value] of Object.entries(sheet.stats)) {
+        if (detail.stats) {
+            for (const [key, value] of Object.entries(detail.stats)) {
                 if (statMap[key]) {
                     mappedStats[statMap[key]] = value;
                 } else {
@@ -315,11 +325,22 @@
         }
 
         const sheetData = {
-            name: sheet.name,
-            className: sheet.className,
-            raceName: sheet.raceName,
-            classDescription: sheet.classDescription || '',
-            raceModifiers: sheet.raceModifiers || '',
+            id: detail.id,
+            name: detail.name,
+            className: detail.className,
+            raceName: detail.raceName,
+            classDescription: detail.classDescription || '',
+            raceModifiers: detail.raceModifiers || '',
+            background: detail.background || '',
+            playerName: detail.playerName || '',
+            alignment: detail.alignment || '',
+            personalityTraits: detail.personalityTraits || '',
+            ideals: detail.ideals || '',
+            bonds: detail.bonds || '',
+            flaws: detail.flaws || '',
+            equipment: detail.equipment || '',
+            featuresTraits: detail.featuresTraits || '',
+            attacks: detail.attacks || [],
             stats: mappedStats,
         };
 

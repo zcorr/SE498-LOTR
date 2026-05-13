@@ -44,6 +44,8 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
     // don't try to reach the external Jurassic movies service.
     public Mock<IJurassicAdsClient> MockJurassicAdsClient { get; } = new();
 
+    public Mock<ICharacterSheetService> MockSheetService { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -85,6 +87,41 @@ public class LotrWebAppFactory : WebApplicationFactory<Program>
             MockJurassicAdsClient
                 .Setup(x => x.GetPostersAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<JurassicMoviePoster>());
+
+            // ── Replace ICharacterSheetService with a mock ──
+            var sheetDescriptors = services
+                .Where(d => d.ServiceType == typeof(ICharacterSheetService))
+                .ToList();
+            foreach (var d in sheetDescriptors)
+                services.Remove(d);
+            services.AddScoped<ICharacterSheetService>(_ => MockSheetService.Object);
+
+            MockSheetService
+                .Setup(x => x.GetSheetsForUserAsync(It.IsAny<int>()))
+                .ReturnsAsync(new List<CharacterSheetSummary>());
+
+            MockSheetService
+                .Setup(x => x.SaveSheetAsync(It.IsAny<int>(), It.IsAny<SaveSheetRequest>()))
+                .ReturnsAsync(1);
+
+            MockSheetService
+                .Setup(x => x.GetSheetByIdAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(new CharacterSheetDetail
+                {
+                    Id = 1,
+                    Name = "Test Hero",
+                    ClassName = "Rogue",
+                    RaceName = "Human",
+                    Stats = new Dictionary<string, int> { ["STR"] = 10 },
+                });
+
+            MockSheetService
+                .Setup(x => x.UpdateSheetAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<UpdateSheetRequest>()))
+                .ReturnsAsync(true);
+
+            MockSheetService
+                .Setup(x => x.DeleteSheetAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(true);
 
             // ── Replace IAuthService with a mock ──
             // The real AuthService talks to PostgreSQL on startup
@@ -202,8 +239,8 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, "testuser"),
-                new Claim(ClaimTypes.Name, "testuser"),
+                new Claim(ClaimTypes.NameIdentifier, "1"),
+                new Claim(ClaimTypes.Name, "1"),
             }),
             Expires = DateTime.UtcNow.AddHours(1),
             SigningCredentials = new SigningCredentials(
@@ -637,5 +674,159 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
         var response = await client.GetAsync("/api/gamedata/race");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    // =========================================================================
+    // CHARACTER SHEET CRUD ENDPOINTS
+    // =========================================================================
+
+    [Fact]
+    public async Task SaveSheet_WithAuth_Returns200()
+    {
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.PostAsJsonAsync("/api/character/sheets", new
+        {
+            name = "Gandalf",
+            className = "Wizard",
+            raceName = "Maia",
+            classDescription = "",
+            raceModifiers = "",
+            stats = new Dictionary<string, int> { ["STR"] = 10 },
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SaveSheet_WithoutAuth_Returns401()
+    {
+        var client = CreateUnauthenticatedClient();
+
+        var response = await client.PostAsJsonAsync("/api/character/sheets", new
+        {
+            name = "Gandalf",
+            className = "Wizard",
+            raceName = "Maia",
+            classDescription = "",
+            raceModifiers = "",
+            stats = new Dictionary<string, int> { ["STR"] = 10 },
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSheet_WithAuth_Returns200()
+    {
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.GetAsync("/api/character/sheets/1");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetSheet_WithoutAuth_Returns401()
+    {
+        var client = CreateUnauthenticatedClient();
+
+        var response = await client.GetAsync("/api/character/sheets/1");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateSheet_WithAuth_Returns200()
+    {
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync("/api/character/sheets/1", new
+        {
+            name = "Aragorn",
+            background = "Outlander",
+            playerName = "Kylee",
+            alignment = "Lawful Good",
+            personalityTraits = "Stoic",
+            ideals = "Duty",
+            bonds = "Fellowship",
+            flaws = "Stubborn",
+            stats = new Dictionary<string, int> { ["STR"] = 16 },
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateSheet_WithoutAuth_Returns401()
+    {
+        var client = CreateUnauthenticatedClient();
+
+        var response = await client.PutAsJsonAsync("/api/character/sheets/1", new
+        {
+            name = "Aragorn",
+            background = "",
+            playerName = "",
+            alignment = "",
+            personalityTraits = "",
+            ideals = "",
+            bonds = "",
+            flaws = "",
+            stats = new Dictionary<string, int> { ["STR"] = 16 },
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateSheet_WrongUser_Returns404()
+    {
+        // Override the default mock to simulate wrong-user (returns false)
+        _factory.MockSheetService
+            .Setup(x => x.UpdateSheetAsync(1, 1, It.IsAny<UpdateSheetRequest>()))
+            .ReturnsAsync(false);
+
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync("/api/character/sheets/1", new
+        {
+            name = "Aragorn",
+            background = "",
+            playerName = "",
+            alignment = "",
+            personalityTraits = "",
+            ideals = "",
+            bonds = "",
+            flaws = "",
+            stats = new Dictionary<string, int> { ["STR"] = 16 },
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        // Restore the default so subsequent tests aren't affected
+        _factory.MockSheetService
+            .Setup(x => x.UpdateSheetAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<UpdateSheetRequest>()))
+            .ReturnsAsync(true);
+    }
+
+    [Fact]
+    public async Task UpdateSheet_BlankName_Returns400()
+    {
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync("/api/character/sheets/1", new
+        {
+            name = "",
+            background = "",
+            playerName = "",
+            alignment = "",
+            personalityTraits = "",
+            ideals = "",
+            bonds = "",
+            flaws = "",
+            stats = new Dictionary<string, int> { ["STR"] = 16 },
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }

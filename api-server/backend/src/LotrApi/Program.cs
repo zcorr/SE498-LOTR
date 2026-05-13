@@ -139,6 +139,7 @@ static void AddPremadeFilterParameters(NpgsqlCommand command, int? classId, int?
         query is null ? DBNull.Value : query;
 }
 
+
 static async Task<StatRecord?> GetStatByNameAsync(string name, NpgsqlDataSource ds, CancellationToken cancellationToken = default)
 {
     await using var conn = await ds.OpenConnectionAsync(cancellationToken);
@@ -580,8 +581,15 @@ public partial class Program
     }
 }
 
+public sealed record PremadeQuery(
+    [property: JsonPropertyName("class_id")] int? ClassId,
+    [property: JsonPropertyName("race_id")] int? RaceId,
+    [property: JsonPropertyName("q")] string? Query,
+    [property: JsonPropertyName("limit")] int? Limit,
+    [property: JsonPropertyName("offset")] int? Offset);
+
 public sealed record GenerateRequest(
     [property: JsonPropertyName("class_id")] int ClassId,
     [property: JsonPropertyName("race_id")] int RaceId);
 
-file sealed record StatRecord(int Id, string Name, int BaseValue);
+public sealed record StatRecord(int Id, string Name, int BaseValue);
