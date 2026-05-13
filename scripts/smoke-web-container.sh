@@ -10,7 +10,7 @@ cleanup() {
   if [ "${KEEP_RUNNING:-0}" != "1" ]; then
     docker compose -f "$COMPOSE_FILE" down --remove-orphans >/dev/null 2>&1 || true
   fi
-  exit "$status"
+  return "$status"
 }
 trap cleanup EXIT
 
