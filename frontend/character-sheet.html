@@ -264,13 +264,19 @@
       padding: 0.1rem 0;
     }
     .check-dot {
+      appearance: none;
+      -webkit-appearance: none;
       width: 10px; height: 10px;
       border: 1.5px solid var(--lotr-card-border);
       border-radius: 50%;
       flex-shrink: 0;
       background-color: var(--lotr-input-bg);
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
     }
-    .check-dot.filled { background-color: var(--lotr-accent); border-color: var(--lotr-accent); }
+    .check-dot:checked { background-color: var(--lotr-accent); border-color: var(--lotr-accent); }
+    .check-dot:disabled { cursor: default; opacity: 1; }
     .check-val { font-weight: bold; min-width: 22px; text-align: right; font-size: 0.78rem; }
     .check-name { flex: 1; }
     .check-name em { color: var(--lotr-muted); font-size: 0.72rem; }
@@ -331,7 +337,19 @@
     .hp-max-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem; }
     .hp-max-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--lotr-muted); }
     .hp-max-val { font-size: 0.9rem; font-weight: bold; }
-    .hp-current { background-color: var(--lotr-input-bg); border: 1px solid var(--lotr-input-border); border-radius: 4px; min-height: 36px; margin-bottom: 0.15rem; }
+    .hp-current {
+      background-color: var(--lotr-input-bg);
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 4px;
+      min-height: 36px;
+      margin-bottom: 0.15rem;
+      display: flex;
+      align-items: center;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.88rem;
+      color: var(--lotr-text);
+      font-weight: bold;
+    }
 
     .dice-saves-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
     .dice-box, .saves-box {
@@ -347,12 +365,37 @@
     .saves-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; flex: 1; }
     .save-circles { display: flex; gap: 3px; }
     .save-circle {
+      appearance: none;
+      -webkit-appearance: none;
       width: 16px; height: 16px;
       border: 1.5px solid var(--lotr-card-border);
       border-radius: 50%;
       background-color: var(--lotr-input-bg);
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
     }
-    .save-circle.filled { background-color: var(--lotr-accent); }
+    .save-circle:checked { background-color: var(--lotr-accent); }
+    .save-circle:disabled { cursor: default; opacity: 1; }
+
+    .sheet-number-input {
+      background-color: var(--lotr-input-bg);
+      border: 1px solid var(--lotr-input-border);
+      border-radius: 3px;
+      color: var(--lotr-text);
+      font-family: 'Georgia', serif;
+      font-size: 0.88rem;
+      font-weight: bold;
+      min-height: 26px;
+      padding: 0.15rem 0.3rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .sheet-number-input.invalid {
+      border-color: #c0392b;
+      background-color: #fff0ee;
+      color: #c0392b;
+    }
 
     .attacks-box {
       background-color: var(--lotr-section-bg);
@@ -791,9 +834,9 @@
               <span class="hp-max-label">Hit Point Maximum</span>
               <span class="hp-max-val" id="stat-hp-max">—</span>
             </div>
-            <div class="hp-current" style="padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Current Hit Points</div>
+            <div class="hp-current" id="stat-hp-current"></div>
             <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Current Hit Points</div>
-            <div class="hp-current" style="margin-top:0.3rem; padding:0.3rem 0.5rem; font-size:0.78rem; color:var(--lotr-muted);">Temporary Hit Points</div>
+            <div class="hp-current" id="stat-hp-temp" style="margin-top:0.3rem;"></div>
             <div class="section-label" style="font-size:0.6rem; margin-top:0.3rem;">Temporary Hit Points</div>
           </div>
 
@@ -804,20 +847,24 @@
               <div class="section-label">Hit Dice</div>
               <div style="display:flex; align-items:center; gap:0.3rem; margin-top:0.3rem;">
                 <span style="font-size:0.72rem; color:var(--lotr-muted);">Total:</span>
-                <div style="flex:1; background:var(--lotr-input-bg); border:1px solid var(--lotr-input-border); border-radius:3px; height:18px;"></div>
+                <div id="stat-hit-dice-total" style="flex:1; background:var(--lotr-input-bg); border:1px solid var(--lotr-input-border); border-radius:3px; min-height:18px; padding:0 0.25rem; font-size:0.78rem; font-weight:bold;"></div>
               </div>
             </div>
             <div class="saves-box">
               <div class="saves-row">
                 <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Successes</span>
                 <div class="save-circles">
-                  <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
+                  <input type="checkbox" class="save-circle" data-death-save-type="success" data-death-save-index="1" data-death-save-stat="deathSaveSuccess1" disabled>
+                  <input type="checkbox" class="save-circle" data-death-save-type="success" data-death-save-index="2" data-death-save-stat="deathSaveSuccess2" disabled>
+                  <input type="checkbox" class="save-circle" data-death-save-type="success" data-death-save-index="3" data-death-save-stat="deathSaveSuccess3" disabled>
                 </div>
               </div>
               <div class="saves-row">
                 <span style="font-size:0.65rem; color:var(--lotr-muted); flex:1;">Failures</span>
                 <div class="save-circles">
-                  <div class="save-circle"></div><div class="save-circle"></div><div class="save-circle"></div>
+                  <input type="checkbox" class="save-circle" data-death-save-type="failure" data-death-save-index="1" data-death-save-stat="deathSaveFailure1" disabled>
+                  <input type="checkbox" class="save-circle" data-death-save-type="failure" data-death-save-index="2" data-death-save-stat="deathSaveFailure2" disabled>
+                  <input type="checkbox" class="save-circle" data-death-save-type="failure" data-death-save-index="3" data-death-save-stat="deathSaveFailure3" disabled>
                 </div>
               </div>
               <div class="section-label">Death Saves</div>
@@ -996,9 +1043,44 @@
     const m = Math.floor((score - 10) / 2);
     return (m >= 0 ? '+' : '') + m;
   }
+  function modValue(score) {
+    return Math.floor((Number(score) - 10) / 2);
+  }
+  function formatBonus(value) {
+    return (value >= 0 ? '+' : '') + value;
+  }
   function set(id, val) {
     const el = document.getElementById(id);
     if (el && val !== undefined && val !== null) el.textContent = val;
+  }
+  function statNumber(stats, key) {
+    const value = stats?.[key];
+    return Number.isInteger(value) ? value : '';
+  }
+  function getSheetLevel(s) {
+    const directLevel = Number(s?.level ?? s?.classLevel);
+    if (Number.isInteger(directLevel) && directLevel > 0) return directLevel;
+
+    const classText = String(s?.className ?? s?.class ?? '');
+    const parsedLevel = classText.match(/\b(?:level\s*)?([1-9]|1[0-9]|20)\b/i);
+    return parsedLevel ? Number(parsedLevel[1]) : 1;
+  }
+  function proficiencyBonusForLevel(level) {
+    return 2 + Math.floor((Math.max(1, Math.min(20, level)) - 1) / 4);
+  }
+  function getProficiencyBonus(s = sheet) {
+    return proficiencyBonusForLevel(getSheetLevel(s));
+  }
+  function proficiencyStatKey(group, key) {
+    return `${group}Proficiency${key.replace(/[^a-zA-Z0-9]/g, '')}`;
+  }
+  function isCheckedStat(stats, key) {
+    return Number(stats?.[key]) === 1;
+  }
+  function setNumberDisplay(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = Number.isInteger(value) ? value : '';
   }
 
   // ── Ability score definitions ─────────────────────────────
@@ -1074,33 +1156,85 @@
   function buildSavingThrows(stats, profBonus) {
     const list = document.getElementById('saving-throws-list');
     list.innerHTML = '';
+    const proficiencyBonus = profBonus ?? getProficiencyBonus();
     SAVING_THROWS.forEach(s => {
       const score = stats?.[s.key] ?? 10;
-      const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
-      const val = (bonus >= 0 ? '+' : '') + bonus;
+      const proficiencyKey = proficiencyStatKey('save', s.key);
+      const isProficient = isCheckedStat(stats, proficiencyKey);
+      const bonus = typeof score === 'number' ? modValue(score) : 0;
+      const val = bonus + (isProficient ? proficiencyBonus : 0);
       list.innerHTML += `
-          <div class="check-item">
-            <div class="check-dot"></div>
-            <span class="check-val">${val}</span>
+          <label class="check-item">
+            <input type="checkbox" class="check-dot" data-proficiency-group="save" data-proficiency-stat="${proficiencyKey}" data-proficiency-source="${s.key}" ${isProficient ? 'checked' : ''} ${editMode ? '' : 'disabled'}>
+            <span class="check-val" data-proficiency-value="${proficiencyKey}">${formatBonus(val)}</span>
             <span class="check-name">${s.label}</span>
-          </div>`;
+          </label>`;
     });
+    wireProficiencyToggles(list);
   }
 
   // ── Populate skills ───────────────────────────────────────
   function buildSkills(stats) {
     const list = document.getElementById('skills-list');
     list.innerHTML = '';
+    const proficiencyBonus = getProficiencyBonus();
     SKILLS.forEach(s => {
       const score = stats?.[s.key] ?? 10;
-      const bonus = typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
-      const val = (bonus >= 0 ? '+' : '') + bonus;
+      const proficiencyKey = proficiencyStatKey('skill', s.label);
+      const isProficient = isCheckedStat(stats, proficiencyKey);
+      const bonus = typeof score === 'number' ? modValue(score) : 0;
+      const val = bonus + (isProficient ? proficiencyBonus : 0);
       list.innerHTML += `
-          <div class="check-item">
-            <div class="check-dot"></div>
-            <span class="check-val">${val}</span>
+          <label class="check-item">
+            <input type="checkbox" class="check-dot" data-proficiency-group="skill" data-proficiency-stat="${proficiencyKey}" data-proficiency-source="${s.key}" ${isProficient ? 'checked' : ''} ${editMode ? '' : 'disabled'}>
+            <span class="check-val" data-proficiency-value="${proficiencyKey}">${formatBonus(val)}</span>
             <span class="check-name">${s.label} <em>(${s.key})</em></span>
-          </div>`;
+          </label>`;
+    });
+    wireProficiencyToggles(list);
+  }
+
+  function wireProficiencyToggles(scope) {
+    scope.querySelectorAll('[data-proficiency-stat]').forEach(input => {
+      input.addEventListener('change', () => {
+        enforceProficiencyLimit(input);
+        updateProficiencyValues();
+      });
+    });
+  }
+
+  function enforceProficiencyLimit(changedInput) {
+    const group = changedInput.dataset.proficiencyGroup;
+    const selected = document.querySelectorAll(`[data-proficiency-group="${group}"]:checked`);
+    if (selected.length > 2) {
+      changedInput.checked = false;
+    }
+  }
+
+  function updateProficiencyValues() {
+    const proficiencyBonus = getProficiencyBonus();
+    document.querySelectorAll('[data-proficiency-stat]').forEach(input => {
+      const source = input.dataset.proficiencySource;
+      const scoreInput = document.querySelector(`[data-edit-field="stat-${source}"]`);
+      const rawScore = scoreInput ? Number(scoreInput.value) : (sheet.stats?.[source] ?? 10);
+      const baseBonus = Number.isInteger(rawScore) && rawScore >= 1 && rawScore <= 30 ? modValue(rawScore) : 0;
+      const total = baseBonus + (input.checked ? proficiencyBonus : 0);
+      const valueEl = document.querySelector(`[data-proficiency-value="${input.dataset.proficiencyStat}"]`);
+      if (valueEl) valueEl.textContent = formatBonus(total);
+    });
+  }
+
+  function buildDeathSaves(stats) {
+    document.querySelectorAll('[data-death-save-stat]').forEach(input => {
+      const type = input.dataset.deathSaveType;
+      const index = Number(input.dataset.deathSaveIndex);
+      const legacyCountKey = type === 'success' ? 'deathSaveSuccesses' : 'deathSaveFailures';
+      const checked = input.dataset.deathSaveStat in (stats ?? {})
+        ? isCheckedStat(stats, input.dataset.deathSaveStat)
+        : Number(stats?.[legacyCountKey] ?? 0) >= index;
+
+      input.checked = checked;
+      input.disabled = !editMode;
     });
   }
 
@@ -1206,6 +1340,38 @@
     }
   }
 
+  function replaceWithOptionalNumberInput(containerId, statKey, options = {}) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = options.className ?? 'sheet-number-input';
+    input.dataset.editField = `stat-${statKey}`;
+    input.dataset.optionalNumberStat = statKey;
+    input.min = options.min ?? '0';
+    input.max = options.max ?? '999';
+    input.step = '1';
+    input.value = statNumber(sheet.stats, statKey);
+    input.addEventListener('input', validateEditInputs);
+
+    el.textContent = '';
+    el.appendChild(input);
+  }
+
+  function readOptionalNumberInput(stats, statKey) {
+    const input = document.querySelector(`[data-optional-number-stat="${statKey}"]`);
+    if (!input) return;
+
+    const raw = input.value.trim();
+    if (raw === '') {
+      delete stats[statKey];
+      return;
+    }
+
+    stats[statKey] = Number(raw);
+  }
+
   // ── Edit mode ─────────────────────────────────────────────
   function enterEditMode() {
     if (editMode) return;
@@ -1268,6 +1434,7 @@
         } else if (modEl) {
           modEl.textContent = '—';
         }
+        updateProficiencyValues();
         validateEditInputs();
       });
       scoreEl.textContent = '';
@@ -1288,6 +1455,15 @@
       hpEl.textContent = '';
       hpEl.appendChild(input);
     }
+
+    replaceWithOptionalNumberInput('stat-inspiration', 'inspiration', { className: 'sheet-number-input' });
+    replaceWithOptionalNumberInput('stat-hp-current', 'currentHitPoints');
+    replaceWithOptionalNumberInput('stat-hp-temp', 'temporaryHitPoints');
+    replaceWithOptionalNumberInput('stat-hit-dice-total', 'hitDiceTotal');
+
+    buildSavingThrows(sheet.stats);
+    buildSkills(sheet.stats);
+    buildDeathSaves(sheet.stats);
 
     const traitFields = [
       { id: 'trait-personality', field: 'personalityTraits' },
@@ -1428,6 +1604,25 @@
       }
     }
 
+    document.querySelectorAll('[data-optional-number-stat]').forEach(input => {
+      const raw = input.value.trim();
+      const v = Number(raw);
+      const errEl = input.parentElement.querySelector('.edit-error');
+      if (raw !== '' && (!Number.isInteger(v) || v < 0 || v > 999)) {
+        input.classList.add('invalid');
+        if (!errEl) {
+          const err = document.createElement('span');
+          err.className = 'edit-error';
+          err.textContent = '0-999 or blank';
+          input.parentElement.appendChild(err);
+        }
+        valid = false;
+      } else {
+        input.classList.remove('invalid');
+        if (errEl) errEl.remove();
+      }
+    });
+
     const saveBtn = document.getElementById('save-btn');
     if (saveBtn) saveBtn.disabled = !valid;
 
@@ -1451,6 +1646,18 @@
     });
     const hpInput = document.querySelector('[data-edit-field="stat-charhealth"]');
     if (hpInput) newStats.charhealth = parseInt(hpInput.value);
+
+    ['inspiration', 'currentHitPoints', 'temporaryHitPoints', 'hitDiceTotal'].forEach(statKey => {
+      readOptionalNumberInput(newStats, statKey);
+    });
+
+    document.querySelectorAll('[data-proficiency-stat]').forEach(input => {
+      newStats[input.dataset.proficiencyStat] = input.checked ? 1 : 0;
+    });
+
+    document.querySelectorAll('[data-death-save-stat]').forEach(input => {
+      newStats[input.dataset.deathSaveStat] = input.checked ? 1 : 0;
+    });
 
     const attacks = [];
     for (let i = 0; i < 6; i++) {
@@ -1594,8 +1801,12 @@
     set('stat-initiative',  mod(stats.DEX ?? 10));
     set('stat-speed',       s.speed ?? '30');
     set('stat-hp-max',      s.stats?.charhealth ?? '—');
+    setNumberDisplay('stat-hp-current', statNumber(stats, 'currentHitPoints'));
+    setNumberDisplay('stat-hp-temp', statNumber(stats, 'temporaryHitPoints'));
     set('stat-hit-dice',    s.hitDice ?? '1d8');
-    set('stat-proficiency', '+2');
+    setNumberDisplay('stat-hit-dice-total', statNumber(stats, 'hitDiceTotal'));
+    setNumberDisplay('stat-inspiration', statNumber(stats, 'inspiration'));
+    set('stat-proficiency', formatBonus(getProficiencyBonus(s)));
 
     // Passive wisdom
     const wisBonus = Math.floor(((stats.WIS ?? 10) - 10) / 2);
@@ -1612,9 +1823,10 @@
 
     // Ability scores
     buildAbilityCol(stats);
-    buildSavingThrows(stats);
+    buildSavingThrows(stats, getProficiencyBonus(s));
     buildSkills(stats);
     buildAttacks(s.attacks);
+    buildDeathSaves(stats);
 
     // Background tab
     set('bg-age',       s.age ?? '—');

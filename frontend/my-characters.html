@@ -216,8 +216,19 @@
     const STAT_LABELS = {
         STR: 'STR', DEX: 'DEX', CON: 'CON',
         INT: 'INT', WIS: 'WIS', CHA: 'CHA',
+        strength: 'STR', dexterity: 'DEX', constitution: 'CON',
+        intelligence: 'INT', wisdom: 'WIS', charisma: 'CHA',
         charhealth: 'HP',
     };
+    const SUMMARY_STAT_KEYS = [
+        ['STR', 'strength'],
+        ['DEX', 'dexterity'],
+        ['CON', 'constitution'],
+        ['INT', 'intelligence'],
+        ['WIS', 'wisdom'],
+        ['CHA', 'charisma'],
+        'charhealth',
+    ];
 
     let allSheets = [];
 
@@ -275,9 +286,12 @@
         <div class="char-meta">${sheet.className} · ${sheet.raceName}</div>
         <div class="char-date">Created ${date}</div>
         <div class="stat-row">
-          ${Object.entries(stats).map(([k, v]) => {
-                const label = STAT_LABELS[k] || k;
-                return `<span class="stat-badge"><strong>${label}</strong> ${v}</span>`;
+          ${SUMMARY_STAT_KEYS.map(keys => {
+                const candidates = Array.isArray(keys) ? keys : [keys];
+                const key = candidates.find(k => stats[k] !== undefined);
+                if (!key) return '';
+                const label = STAT_LABELS[key] || key;
+                return `<span class="stat-badge"><strong>${label}</strong> ${stats[key]}</span>`;
             }).join('')}
         </div>
         <div class="card-actions">
