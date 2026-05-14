@@ -333,6 +333,16 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Logout_WithoutAuth_Returns401()
+    {
+        var client = CreateUnauthenticatedClient();
+
+        var response = await client.PostAsync("/api/auth/logout", null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     // =========================================================================
     // PROTECTED PAGE ROUTES — without auth
     // These verify that [Authorize] blocks unauthenticated access.
@@ -817,6 +827,44 @@ public class EndpointTests : IClassFixture<LotrWebAppFactory>
         // Restore the default so subsequent tests aren't affected
         _factory.MockSheetService
             .Setup(x => x.UpdateSheetAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<UpdateSheetRequest>()))
+            .ReturnsAsync(true);
+    }
+
+    [Fact]
+    public async Task DeleteSheet_WithAuth_Returns200()
+    {
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.DeleteAsync("/api/character/sheets/1");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteSheet_WithoutAuth_Returns401()
+    {
+        var client = CreateUnauthenticatedClient();
+
+        var response = await client.DeleteAsync("/api/character/sheets/1");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteSheet_WrongUser_Returns404()
+    {
+        _factory.MockSheetService
+            .Setup(x => x.DeleteSheetAsync(1, 1))
+            .ReturnsAsync(false);
+
+        var client = CreateAuthenticatedClient();
+
+        var response = await client.DeleteAsync("/api/character/sheets/1");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        _factory.MockSheetService
+            .Setup(x => x.DeleteSheetAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(true);
     }
 
