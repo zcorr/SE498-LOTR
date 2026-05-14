@@ -312,10 +312,10 @@
         const result = await response.json();
 
         if (response.ok) {
-          // Login successful - redirect to premades
+          // Login successful - redirect to create character
           showAlert('Login successful! Redirecting…', 'success');
           setTimeout(() => {
-            window.location.href = '/premade';
+            window.location.href = '/character/create';
           }, 800);
         } else if (response.status === 401) {
           showAlert('Invalid username or password. Please try again.');
