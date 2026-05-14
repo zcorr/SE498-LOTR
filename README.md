@@ -2,256 +2,456 @@
 
 [![CI](https://github.com/zcorr/SE498-LOTR/actions/workflows/ci.yml/badge.svg)](https://github.com/zcorr/SE498-LOTR/actions/workflows/ci.yml)
 
-A Lord of the Rings themed character generator that turns iconic Tolkien
-characters into playable D&D-style character sheets. Pick a premade hero
-(Aragorn, Gandalf, Frodo…), or roll a fresh build from a class + race, then
-save it to your account.
+A Lord of the Rings themed character generator that turns Tolkien-inspired
+heroes into playable D&D-style character sheets. Users can log in, browse
+premade characters, roll a new class/race build, save sheets, and edit saved
+character details.
+
+## What Runs Here
+
+| Layer | Path | Tech | Default URL |
+| --- | --- | --- | --- |
+| MVC web app | [web-server/](web-server/) | ASP.NET Core 10 MVC, Npgsql, JWT cookies | http://localhost:5292 |
+| Static pages | [frontend/](frontend/) | HTML, Bootstrap, vanilla JS | served by the MVC app |
+| LOTR API | [api-server/backend/src/LotrApi/](api-server/backend/src/LotrApi/) | ASP.NET Core 10 minimal API, Npgsql | http://localhost:5030 |
+| API database | [api-server/backend/src/database/](api-server/backend/src/database/) | Postgres, schema + seed SQL | `lotr` |
+| Web database | [web-server/database/schema/](web-server/database/schema/) | Postgres, users + saved sheets | `lotr_users` |
+| Web tests | [web-server.Tests/](web-server.Tests/) | xUnit, Moq, WebApplicationFactory | no Docker needed |
+| API tests | [api-server/backend/src/LotrApi.Tests/](api-server/backend/src/LotrApi.Tests/) | xUnit, Testcontainers | Docker required |
+
+The normal Makefile workflow runs both LOTR databases in one local Postgres
+container named `lotr-pg`. The Docker Compose workflow uses separate Postgres
+containers for the API and web databases.
+
+Sponsored banner ads are proxied by the MVC app from the Jurassic movie service.
+The Jurassic project is vendored as a Git submodule at
+[external/Project1-jurassic-park](external/Project1-jurassic-park). `make`
+initializes it automatically on a fresh checkout when the full stack is used.
 
 ## Architecture
 
-Three-tier, two databases, plus the Jurassic movie service used for sponsored
-banner ads:
+```text
+Browser
+  |
+  | http://localhost:5292
+  v
+MVC web app
+  - serves frontend/*.html
+  - authenticates users
+  - stores JWT in AuthToken cookie
+  - saves character sheets in lotr_users
+  |
+  | Bearer JWT to http://localhost:5030
+  v
+LOTR API
+  - classes, races, stats, abilities
+  - premade characters
+  - generated sheets
+  |
+  v
+Postgres lotr
 
+MVC web app also calls Jurassic API for banner ads:
+http://localhost:5081 by default.
 ```
-                      ┌────────────────────┐
-  Browser  ───────►   │  Web Server (MVC)  │  :5292
-                      │   web-server/      │
-                      │   serves frontend/ │
-                      │   issues JWT cookie│
-                      └─────────┬──────────┘
-                                │ Bearer JWT
-                                ▼
-                      ┌────────────────────┐
-                      │  API Server        │  :5030
-                      │   api-server/      │
-                      │   game data + gen  │
-                      └─────────┬──────────┘
-                                │
-                ┌───────────────┴───────────────┐
-                ▼                               ▼
-         Postgres "lotr"                 Postgres "lotr_users"
-         (classes, races, stats,         (users, character_sheets)
-          abilities, premades)
-```
-
-Both Postgres databases run in a single container (`lotr-pg`,
-`postgres:16-alpine`) on port 5432.
-
-Sponsored banner ads are loaded through the web server from the Jurassic movie
-service at `http://localhost:5080`. The Jurassic project is included as a Git
-submodule at [external/Project1-jurassic-park](external/Project1-jurassic-park),
-and `make` initializes it automatically on a fresh checkout if needed. If you
-want to use a separate local checkout, pass
-`JURASSIC_DIR=/path/to/Project1-jurassic-park`.
-
-| Layer            | Path                             | Tech                          | Default URL              |
-| ---------------- | -------------------------------- | ----------------------------- | ------------------------ |
-| Frontend (HTML)  | [frontend/](frontend/)           | HTML + Bootstrap + vanilla JS | served by web-server     |
-| Web server (MVC) | [web-server/](web-server/)       | ASP.NET Core 10, Npgsql, JWT  | http://localhost:5292    |
-| API server       | [api-server/](api-server/)       | ASP.NET Core 10 minimal API   | http://localhost:5030    |
-| API tests        | [api-server/backend/src/LotrApi.Tests/](api-server/backend/src/LotrApi.Tests/) | xUnit + Testcontainers | (Docker required) |
-| Web tests        | [web-server.Tests/](web-server.Tests/) | xUnit + Moq + WebApplicationFactory | (no Docker needed) |
 
 ## Prerequisites
 
-You need four things on your machine:
+Install:
 
-1. **[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)** — verify with `dotnet --version` (should print `10.x.x`).
-2. **Docker** (Desktop or Engine) — used to run Postgres and required by the API integration tests. Verify with `docker info`.
-3. **Git** — needed to initialize the Jurassic submodule on first run.
-4. **make** — preinstalled on macOS / most Linux distros. On Windows use WSL or install via [chocolatey](https://chocolatey.org/) (`choco install make`).
+1. [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+2. Docker Desktop or Docker Engine
+3. Git
+4. `make`
 
-Optional: `psql` on your `PATH` if you want to poke at the databases outside of `make db-psql`.
+Optional:
 
-Port 5432 (Postgres), 5030 (API), and 5292 (web) must be free.
+- `psql`, if you want to inspect databases manually.
 
-## Quick start
+Default ports used by local development:
 
-From the repo root:
+| Port | Service |
+| --- | --- |
+| `5292` | LOTR MVC web app |
+| `5030` | LOTR API |
+| `5432` | LOTR Postgres container |
+| `5080` | Jurassic web app |
+| `5081` | Jurassic movie API |
+| `55433` | Jurassic Postgres host port |
+
+## Quick Start
+
+Start the full local demo stack:
 
 ```bash
 make
 ```
 
-That single command:
+This runs:
 
-1. Initializes the Jurassic submodule if needed.
-2. Starts the Jurassic movie service stack (`:5080` API, `:5044` web, Postgres on host `:5433`).
-3. Starts (or reuses) the `lotr-pg` Postgres container.
-4. Creates the `lotr` and `lotr_users` databases if they don't exist.
-5. Applies the web-server user/sheet schema (the API server applies its own schema on startup).
-6. Boots the API server on `:5030` and the web server on `:5292` in parallel.
+1. Jurassic web/API/Postgres stack.
+2. LOTR Postgres container `lotr-pg`.
+3. `lotr` and `lotr_users` database creation.
+4. Web database schema migrations.
+5. LOTR API on `http://localhost:5030`.
+6. MVC web app on `http://localhost:5292`.
 
-Then open:
+Open:
 
-- **App:** http://localhost:5292/Auth/Login
-- **API Swagger UI:** http://localhost:5030/swagger
-- **API health:** http://localhost:5030/health
+- App: http://localhost:5292/Auth/Login
+- API Swagger UI: http://localhost:5030/swagger
+- API health: http://localhost:5030/health
 
-Default seeded login:
+Default login:
 
 | Username | Password |
-| -------- | -------- |
-| `admin`  | `password` |
+| --- | --- |
+| `admin` | `password` |
 
-You can also register a new account from the login page. Press **Ctrl-C** in the
-terminal running `make` to stop both servers; the Postgres container keeps
-running so the next `make` is fast.
+Press `Ctrl-C` in the terminal running `make` to stop the API and web app. The
+Postgres containers stay running for faster restarts unless you run `make down`.
 
-## Make targets
+## LOTR-Only Startup
 
-```
-make            Start Jurassic + Postgres + api-server + web-server (alias: make up)
-make dev        Run both servers (assumes db is up)
-make api        Run api-server only        → http://localhost:5030
-make web        Run web-server only        → http://localhost:5292
-make jurassic   Init/run Jurassic stack    → http://localhost:5080
-make db         Start Postgres + create dbs + apply web schema
-make db-reset   Drop and recreate both databases (destructive)
-make db-psql    Open psql against $(API_DB)
-                  override with: make db-psql DB=lotr_users
-make test       Run all tests (LotrApi.Tests requires Docker)
-make down       Stop LOTR Postgres and the Jurassic stack
-make clean      Stop containers and remove .NET build artifacts
-make help       Print the target list
+Use this when another team only needs the LOTR app/API/database, or when
+Jurassic is not needed:
+
+```bash
+make lotr
 ```
 
-Override defaults inline if you need to, e.g. `make PG_PORT=5433 db`.
-The full list of variables is at the top of the [Makefile](Makefile). For
-example, to use a separate Jurassic checkout instead of the submodule, run
-`make JURASSIC_DIR=/path/to/Project1-jurassic-park`.
+That starts only:
+
+- LOTR Postgres
+- LOTR API
+- LOTR MVC web app
+
+It does not start Jurassic. Banner ads will be skipped unless a Jurassic API is
+already running at the configured `JurassicApi__BaseUrl`.
+
+## Docker Compose Startup
+
+The MVC web app can also build and run without a local .NET SDK:
+
+```bash
+docker build -f web-server/Dockerfile -t lotr-web .
+```
+
+Run the containerized LOTR stack:
+
+```bash
+docker compose -f compose.yaml up --build
+```
+
+This starts:
+
+- `lotr-web` on `http://localhost:5292`
+- `lotr-api` on `http://localhost:5030`
+- `lotr-db`
+- `lotr-users-db`
+
+The root Compose stack does not start Jurassic. If Jurassic is already running
+on the host at `http://localhost:5081`, the MVC container reaches it through
+`http://host.docker.internal:5081`. If not, the app still works and banner ads
+are skipped.
+
+Stop the Compose stack:
+
+```bash
+docker compose -f compose.yaml down
+```
+
+Stop and remove Compose database volumes:
+
+```bash
+docker compose -f compose.yaml down -v
+```
+
+Run the container smoke test:
+
+```bash
+./scripts/smoke-web-container.sh
+```
+
+The smoke test builds the Compose stack, waits for `/Auth/Login`, checks `/`
+and `/css/site.css`, logs in with `admin` / `password`, and verifies `/premade`
+and `/character/create`.
+
+## Make Targets
+
+```text
+make            Start full stack: Jurassic + LOTR DB + API + MVC web app
+make up         Same as make
+make lotr       Start only LOTR DB + API + MVC web app
+make dev        Run LOTR API + MVC web app, assuming DB is already running
+make api        Run LOTR API only
+make web        Run MVC web app only
+make jurassic   Start Jurassic stack only
+make db         Start LOTR Postgres, create DBs, apply web schema
+make db-reset   Drop and recreate LOTR databases, then apply web schema
+make db-psql    Open psql against lotr; override with DB=lotr_users
+make test       Run web and API test suites
+make down       Stop dev servers, LOTR Postgres, and Jurassic
+make clean      Run make down, then dotnet clean for API and web app
+make help       Print target help
+```
+
+Useful overrides:
+
+```bash
+make PG_PORT=5433 db
+make DB=lotr_users db-psql
+make JURASSIC_DIR=/path/to/Project1-jurassic-park jurassic
+make JURASSIC_MOVIE_PORT=5091 jurassic
+```
 
 ## Configuration
 
-Defaults that the Makefile and app config agree on:
+Default development settings:
 
-| Setting           | Value                                   |
-| ----------------- | --------------------------------------- |
-| Postgres user/pw  | `postgres` / `postgres`                 |
-| Postgres port     | `5432`                                  |
-| API database      | `lotr`                                  |
-| Users database    | `lotr_users`                            |
-| Jurassic API      | `http://localhost:5080`                 |
-| JWT shared secret | `Cool_Mega_Secret_Key_For_JWT_Token_Generation` (dev fallback) |
+| Setting | Default |
+| --- | --- |
+| LOTR API URL used by MVC | `http://localhost:5030` |
+| Jurassic API URL used by MVC | `http://localhost:5081` |
+| LOTR Postgres user/password | `postgres` / `postgres` |
+| LOTR API database | `lotr` |
+| LOTR web database | `lotr_users` |
+| JWT dev secret | `Cool_Mega_Secret_Key_For_JWT_Token_Generation` |
 
-The shared JWT secret is the dev fallback baked into both
-[web-server/Program.cs](web-server/Program.cs) and
-[api-server/backend/src/LotrApi/Program.cs](api-server/backend/src/LotrApi/Program.cs).
-Override in production via the `Jwt__Secret` environment variable, and override
-the connection strings via `ConnectionStrings__DefaultConnection` (api) and
-`ConnectionStrings__UsersConnection` (web).
+Environment variable overrides:
 
-## API endpoints
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `LotrApi__BaseUrl` | MVC web app | Base URL for the LOTR API |
+| `JurassicApi__BaseUrl` | MVC web app | Base URL for Jurassic banner ads |
+| `Jwt__Secret` | MVC web app and LOTR API | Shared JWT signing secret |
+| `ConnectionStrings__UsersConnection` | MVC web app | Web/users database |
+| `ConnectionStrings__DefaultConnection` | LOTR API | API game-data database |
 
-The API server is the source of truth for game data. All endpoints except
-`/health` require a `Bearer` JWT signed with the shared secret. The web server
-attaches the cookie token automatically when proxying requests.
+For Docker Compose, service-to-service URLs are different inside the Docker
+network. The root [compose.yaml](compose.yaml) sets these values automatically.
 
-| Method | Path                     | Description                                              |
-| ------ | ------------------------ | -------------------------------------------------------- |
-| GET    | `/health`                | API process liveness (no auth)                           |
-| GET    | `/classes`               | All classes                                              |
-| GET    | `/class/{id}`            | One class (`name`, `desc`, `racialids`)                  |
-| GET    | `/class/{id}/abilities`  | Abilities scoped to a class                              |
-| GET    | `/race`                  | All races (`id`, `name`, `modifiers`)                    |
-| GET    | `/stats`                 | All stat definitions and base values                     |
-| GET    | `/stats/{name}`          | Single stat by name (case-insensitive)                   |
-| GET    | `/charhealth`            | Character health stat (key `charhealth`, **not** `health`) |
-| GET    | `/strength`              | Strength stat                                            |
-| GET    | `/abilities?class_id=N`  | Abilities, optionally filtered by class                  |
-| GET    | `/premades`              | Premade characters with stats JSON                       |
-| GET    | `/names`                 | Premade character names                                  |
-| POST   | `/generate`              | Body: `{ "class_id": N, "race_id": N }` → rolled sheet (4d6 drop lowest, race modifiers, CON-modified `charhealth`) |
+## API Authentication
 
-The full schema lives under
-[api-server/backend/src/database/schema/](api-server/backend/src/database/schema/)
-and is applied automatically by `DatabaseBootstrap` when the API server starts.
-Premades and base stats are seeded by [006_seed.sql](api-server/backend/src/database/schema/006_seed.sql).
+The LOTR API allows unauthenticated `GET /health`. Game-data endpoints require:
 
-## Web server routes
+```text
+Authorization: Bearer <jwt>
+```
 
-| Path                         | Purpose                                          |
-| ---------------------------- | ------------------------------------------------ |
-| `/Auth/Login`, `/Auth/Register` | Login + register pages (anonymous)            |
-| `/premade`                   | Premade character browser (auth required)        |
-| `/character/create`          | Roll a new character (auth required)             |
-| `/character/sheet`           | View a generated/saved sheet (auth required)     |
-| `/my-characters`             | List of saved sheets (auth required)             |
-| `/api/auth/{login,logout,register}` | JSON auth endpoints (sets `AuthToken` cookie) |
-| `/api/character/sheets`      | `POST` save new sheet, `GET` list, `PUT /{id}` update, `DELETE /{id}` delete |
-| `/api/character/{races,classes,abilities,stats,generate}` | Authenticated proxy to the API server |
-| `/api/gamedata/*`            | Mirror endpoints over the same API client        |
-| `/api/premade/{list,select/{id}}` | Premade browse + select                     |
+The MVC web app handles this for browser users by storing the JWT in the
+`AuthToken` cookie and forwarding it to the API.
 
-## Character sheet editor
+## LOTR API Endpoints
 
-Saved character sheets are fully editable after creation. An **Edit** button appears on the sheet view for any sheet owned by the logged-in user (including premade characters that have been saved as a copy).
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/health` | API process liveness |
+| GET | `/classes` | All classes |
+| GET | `/class/{id}` | One class with `name`, `desc`, `racialids` |
+| GET | `/class/{id}/abilities` | Abilities for one class |
+| GET | `/race` | All races |
+| GET | `/stats` | All stat definitions and base values |
+| GET | `/stats/{name}` | Single stat by case-insensitive name |
+| GET | `/charhealth` | Character health stat |
+| GET | `/strength` | Strength stat |
+| GET | `/abilities?class_id=N` | Abilities, optionally filtered by class |
+| GET | `/premades` | Paginated/filterable premade list |
+| GET | `/names` | Premade character names |
+| POST | `/generate` | Generate a character from `class_id` and `race_id` |
 
-Clicking **Edit** enters edit mode, which converts the following read-only fields into inputs or textareas:
+`POST /generate` body:
 
-- Background, Player Name, Alignment
-- Personality Traits, Ideals, Bonds, Flaws
-- Equipment
-- Features & Traits (user-authored text; class ability descriptions are appended automatically outside of edit mode)
-- Attacks & Spellcasting (up to 6 rows: Name / Atk Bonus / Damage)
+```json
+{
+  "class_id": 1,
+  "race_id": 1
+}
+```
 
-**Save** issues a `PUT /api/character/sheets/{id}` for existing sheets, or a `POST /api/character/sheets` when saving a premade as a new copy. On success the sheet view is repopulated from the returned data without a page reload.
+The API schema lives under
+[api-server/backend/src/database/schema/](api-server/backend/src/database/schema/).
+`DatabaseBootstrap` applies it when the API starts. Seed data is in
+[006_seed.sql](api-server/backend/src/database/schema/006_seed.sql).
 
-**Premade characters** always show the Edit button. Selecting a premade and clicking Edit will save it as a new sheet in your account before applying changes, leaving the original premade untouched.
+## MVC Web Routes
 
-The three new columns are added by schema migrations applied automatically on `make db`:
+| Path | Purpose |
+| --- | --- |
+| `/` | Home page |
+| `/Auth/Login` | Login page |
+| `/Auth/Register` | Registration page |
+| `/premade` | Premade character browser |
+| `/character/create` | Character generator page |
+| `/character/sheet` | Generated or saved character sheet page |
+| `/my-characters` | Saved character list |
 
-| Migration                              | Change                                                               |
-| -------------------------------------- | -------------------------------------------------------------------- |
-| `004_add_sheet_equipment_features.sql` | Adds `equipment` and `features_traits` columns to `character_sheets` |
-| `005_add_sheet_attacks.sql`            | Adds `attacks` JSONB column to `character_sheets`                    |
+## MVC JSON Routes
+
+| Path | Purpose |
+| --- | --- |
+| `POST /api/auth/login` | Log in and set `AuthToken` cookie |
+| `POST /api/auth/logout` | Clear `AuthToken` cookie |
+| `POST /api/auth/register` | Register a user |
+| `GET /api/banner-ads/movies` | Proxy Jurassic movie posters |
+| `GET /api/premade/list` | List premades through the API |
+| `GET /api/premade/names` | Search premade names through the API |
+| `POST /api/premade/select/{id}` | Select a premade |
+| `GET /api/character/races` | Proxy races |
+| `GET /api/character/classes` | Proxy classes |
+| `GET /api/character/abilities` | Proxy abilities |
+| `GET /api/character/stats` | Proxy stats |
+| `POST /api/character/generate` | Generate a character |
+| `GET /api/gamedata/*` | Legacy/mirror game-data proxy endpoints |
+| `GET /api/character/sheets` | List saved sheets for current user |
+| `POST /api/character/sheets` | Save a sheet |
+| `GET /api/character/sheets/{id}` | Get one saved sheet |
+| `PUT /api/character/sheets/{id}` | Update one saved sheet |
+| `DELETE /api/character/sheets/{id}` | Delete one saved sheet |
+
+## Character Sheet Editing
+
+Saved character sheets are editable after creation. The sheet page supports
+editing:
+
+- background, player name, and alignment
+- personality traits, ideals, bonds, and flaws
+- equipment
+- user-authored features and traits
+- attacks and spellcasting rows
+
+Saving an existing sheet calls `PUT /api/character/sheets/{id}`. Saving a
+premade copy calls `POST /api/character/sheets`.
+
+Web schema migrations are applied by `make db`:
+
+| Migration | Change |
+| --- | --- |
+| `001_users.sql` | Users table |
+| `002_character_sheets.sql` | Saved character sheets |
+| `003_add_sheet_text_fields.sql` | Text fields for editable sheet details |
+| `004_add_sheet_equipment_features.sql` | Equipment and feature text |
+| `005_add_sheet_attacks.sql` | JSONB attacks data |
 
 ## Tests
 
-The Makefile target runs both suites:
+Run all tests:
 
 ```bash
 make test
 ```
 
-Which is equivalent to:
+Equivalent commands:
 
 ```bash
 dotnet test web-server.Tests/web-server.Tests.csproj
 dotnet test api-server/backend/src/LotrApi.Tests/LotrApi.Tests.csproj
 ```
 
-- The **web-server tests** use `WebApplicationFactory` with mocked services; no DB or Docker needed.
-- The **API tests** use [Testcontainers](https://dotnet.testcontainers.org/) to spin up a throwaway `postgres:16-alpine` container per run, so **Docker must be running** or they'll fail.
+Notes:
 
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the API tests against a service-container Postgres on every push and pull request.
+- Web tests use mocked services and do not need Docker.
+- API tests use Testcontainers and require Docker.
+- CI builds and tests [api-server/backend/LotrApi.slnx](api-server/backend/LotrApi.slnx)
+  against a GitHub Actions Postgres service container.
 
-## Project layout
+## Project Layout
 
-```
+```text
 .
-├── Makefile                       # Entry point — `make` runs everything
-├── SPEC.md                        # Original design spec
-├── frontend/                      # Static HTML pages served by web-server
-├── web-server/                    # ASP.NET Core MVC user-facing app
-│   ├── Controllers/               # Auth, Character, Premade, MyCharacters, GameData
-│   ├── Services/                  # AuthService, CharacterSheetService, LotrApiClient
-│   └── database/schema/           # users + character_sheets SQL (applied by `make db`)
-├── web-server.Tests/              # xUnit + Moq endpoint tests
-└── api-server/
-    ├── backend/
-    │   ├── LotrApi.slnx
-    │   └── src/
-    │       ├── LotrApi/           # Minimal API + DatabaseBootstrap
-    │       ├── LotrApi.Tests/     # Testcontainers-backed integration tests
-    │       └── database/          # init.sql + reset.sql + schema/*.sql (auto-applied on start)
-    └── docs/                      # JIRA backlog + wireframes
+|-- Makefile
+|-- compose.yaml
+|-- scripts/
+|   `-- smoke-web-container.sh
+|-- frontend/
+|   |-- login.html
+|   |-- register.html
+|   |-- premades.html
+|   |-- create.html
+|   |-- character-sheet.html
+|   `-- my-characters.html
+|-- web-server/
+|   |-- Controllers/
+|   |-- Services/
+|   |-- Views/
+|   |-- wwwroot/
+|   |-- database/schema/
+|   |-- Dockerfile
+|   `-- web-server.csproj
+|-- web-server.Tests/
+|-- api-server/
+|   |-- backend/
+|   |   |-- LotrApi.slnx
+|   |   `-- src/
+|   |       |-- LotrApi/
+|   |       |-- LotrApi.Tests/
+|   |       `-- database/
+|   `-- docs/
+|-- external/
+|   `-- Project1-jurassic-park/
+|-- SPEC.md
+`-- README.md
 ```
 
 ## Troubleshooting
 
-- **`make` fails with "port 5432 already in use"** — another Postgres is running. Either stop it, or set `PG_PORT=5433` and update the connection strings in `appsettings.json` to match.
-- **`make test` fails with Testcontainers / Docker errors** — make sure Docker Desktop is running. The API tests need it; the web-server tests don't.
-- **Login fails with "Invalid credentials"** — the seed only runs on the first start. If you reset the users DB (`make db-reset`), restart the web server so `SeedDefaultUserAsync` re-creates `admin` / `password`.
-- **API returns 401 on every endpoint** — the JWT secret must match between the web and API servers. Both default to the same dev fallback, so this only happens if you've overridden `Jwt:Secret` in one but not the other.
-- **Wipe everything and start over:** `make clean && make`.
+**Port already in use**
+
+Run:
+
+```bash
+make down
+```
+
+If port `5432` is still occupied by another local Postgres, either stop that
+process or run the LOTR DB on another host port:
+
+```bash
+make PG_PORT=5433 db
+```
+
+If you change `PG_PORT`, also update the local app connection strings or use
+matching `ConnectionStrings__*` environment variables.
+
+**Jurassic banner ads do not show**
+
+The LOTR app still works without ads. To enable ads, start Jurassic:
+
+```bash
+make jurassic
+```
+
+The MVC app expects the Jurassic API at `http://localhost:5081` by default.
+Override it with:
+
+```bash
+JurassicApi__BaseUrl=http://localhost:5081 make web
+```
+
+**Login fails with invalid credentials**
+
+The seeded admin user is created when the MVC app starts. If you reset the web
+database, restart the MVC app and try again:
+
+```text
+admin / password
+```
+
+**API returns 401**
+
+The MVC app and API must share the same `Jwt__Secret`.
+
+**Testcontainers errors**
+
+Start Docker Desktop or Docker Engine, then rerun:
+
+```bash
+make test
+```
+
+**Clean reset**
+
+```bash
+make clean
+make
+```

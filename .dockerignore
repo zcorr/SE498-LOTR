@@ -1,0 +1,9 @@
+**/.git
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/TestResults
+**/.idea
+**/.DS_Store
+external/Project1-jurassic-park
